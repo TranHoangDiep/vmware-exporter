@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  vmware-exporter:
+    # Build từ source code hiện tại (.)
+    build: .
+    image: vmware-exporter:latest
+    container_name: vmware-exporter
+    restart: unless-stopped
+    ports:
+      - "9169:9169"
+    command:
+      # --- Cấu hình kết nối vCenter ---
+      - "-vmware.vcenter=vcenter.example.com"       # Đổi thành địa chỉ IP/FQDN vCenter của bạn
+      - "-vmware.username=administrator@vsphere.local" # User vCenter
+      - "-vmware.password=YOUR_PASSWORD_HERE"       # Mật khẩu vCenter
+      - "-vmware.insecureTLS=true"                  # Bỏ qua xác thực SSL (True nếu dùng Self-signed cert)
+      
+      # --- Cấu hình các Collector (Các mục thu thập dữ liệu) ---
+      # Lưu ý: Mặc định là 'true' nhưng mình liệt kê rõ ở đây để bạn dễ quản lý
+      
+      - "-collector.vm=true"         
+      # [BAT: TRUE] Thu thập metrics Máy ảo (VM)
+      # Bao gồm: CPU, RAM, Disk, Network usage + Snapshot Count, Uptime, VMware Tools Status (Mới thêm)
+      
+      - "-collector.host=true"       
+      # [BAT: TRUE] Thu thập metrics Máy chủ vật lý (ESXi Host)
+      # Bao gồm: Hardware info, CPU model, RAM tổng, Connection state
+      
+      - "-collector.datastore=true"  
+      # [BAT: TRUE] Thu thập metrics Ổ cứng lưu trữ (Datastore)
+      # Bao gồm: Capacity, Free space, Provisioned space
+      
+      - "-collector.cluster=true"    
+      # [BAT: TRUE] Thu thập metrics Cluster (Cụm máy chủ)
+      
+      - "-collector.datacenter=true" 
+      # [BAT: TRUE] Thu thập metrics Datacenter
+      
+      # --- Các cấu hình nâng cao khác ---
+      # - "-log.level=debug"         # Bật log debug nếu cần sửa lỗi
+      # - "-vmware.interval=20"      # Chu kỳ lấy dữ liệu (giây), mặc định 20s
