@@ -1,0 +1,72 @@
+groups:
+- name: VMwareAlerts
+  rules:
+  # 1. Cảnh báo Host bị mất kết nối hoặc Tắt nguồn
+  - alert: VMwareHostDown
+    expr: vmware_host_info{status!="green"} == 1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Host {{ $labels.host }} trên vCenter {{ $labels.vcenter }} không ổn định"
+      description: "Trạng thái hiện tại của Host là {{ $labels.status }}. Kiểm tra kết nối vật lý hoặc vCenter."
+
+  # 2. Cảnh báo Datastore sắp đầy (> 90%)
+  - alert: VMwareDatastoreFillingUp
+    expr: (vmware_datastore_capacity - vmware_datastore_free) / vmware_datastore_capacity * 100 > 90
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Ổ cứng {{ $labels.ds }} sắp đầy"
+      description: "Datastore {{ $labels.ds }} trên vCenter {{ $labels.vcenter }} đã dùng quá 90%. Dung lượng trống còn lại: {{ $value | humanize1024 }}B."
+
+  # 3. Cảnh báo CPU Host quá tải (> 90%)
+  - alert: VMwareHostCPUHigh
+    expr: vmware_host_cpu_usagemhz_average / (vmware_host_cpu_capacity * vmware_host_cpu_corecount) * 100 > 90
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "CPU Host {{ $labels.host }} quá cao"
+      description: "Mức sử dụng CPU trung bình trong 15 phút qua là {{ $value | printf \"%.2f\" }}%."
+
+  # 4. Cảnh báo quá nhiều Snapshot (Dễ gây treo VM hoặc đầy Disk)
+  - alert: VMwareTooManySnapshots
+    expr: vmware_vm_snapshot_count > 5
+    for: 1h
+    labels:
+      severity: info
+    annotations:
+      summary: "Máy ảo {{ $labels.vm }} có quá nhiều snapshot"
+      description: "Máy ảo {{ $labels.vm }} hiện có {{ $value }} snapshots. Hãy kiểm tra và xóa bớt để tránh ảnh hưởng hiệu năng."
+
+  # 5. Cảnh báo vCenter Exporter bị chết (Không lấy được dữ liệu)
+  - alert: VMwareExporterDown
+    expr: up{job="vmware"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "VMware Exporter {{ $labels.instance }} bị sập"
+      description: "Prometheus không thể kết nối tới exporter. Kiểm tra Docker container."
+
+  # 6. Cảnh báo rớt Port (NIC Link Down)
+  - alert: VMwareHostNicLinkDown
+    expr: vmware_host_nic_link_status == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Host {{ $labels.host }} bị rớt Port vật lý ({{ $labels.device }})"
+      description: "Port {{ $labels.device }} trên Host {{ $labels.host }} (vCenter: {{ $labels.vcenter }}) bị mất tín hiệu Link. Hãy kiểm tra cáp mạng hoặc Switch."
+
+  # 7. Cảnh báo rớt Port FC (Fibre Channel HBA Down)
+  - alert: VMwareHostFCLinkDown
+    expr: vmware_host_fc_link_status == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Host {{ $labels.host }} bị rớt Port FC ({{ $labels.device }})"
+      description: "Cổng FC {{ $labels.device }} (WWN: {{ $labels.wwn }}) trên Host {{ $labels.host }} bị Offline. Hãy kiểm tra SAN Switch và kết nối quang."

@@ -60,7 +60,7 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 	err := fetchProperties(
 		loginData["ctx"].(context.Context), loginData["view"].(*view.Manager), loginData["client"].(*vim25.Client),
-		[]string{"HostSystem"}, []string{"parent", "summary", "runtime"}, &hosts, c.logger,
+		[]string{"HostSystem"}, []string{"parent", "summary", "runtime", "config"}, &hosts, c.logger,
 	)
 	if err != nil {
 		return err
@@ -136,6 +136,50 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 					"Amount of RAM in MB", nil, hostLabels,
 				), prometheus.GaugeValue, float64(host.Summary.Hardware.MemorySize),
 			)
+
+			// New Metric: Physical NIC Link Status (Port Up/Down)
+			if host.Config != nil && host.Config.Network != nil {
+				for _, pnic := range host.Config.Network.Pnic {
+					linkStatus := 0.0
+					if pnic.LinkSpeed != nil {
+						linkStatus = 1.0
+					}
+					ch <- prometheus.MustNewConstMetric(
+						prometheus.NewDesc(
+							prometheus.BuildFQName(namespace, hostSubsystem, "nic_link_status"),
+							"Physical NIC link status (1=Up, 0=Down)", nil,
+							map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "device": pnic.Device, "vcenter": loginData["target"].(string)},
+						), prometheus.GaugeValue, linkStatus,
+					)
+				}
+			}
+
+			// New Metric: FC HBA Link Status (Port Up/Down)
+			if host.Config != nil && host.Config.StorageDevice != nil {
+				for _, hba := range host.Config.StorageDevice.HostBusAdapter {
+					if fcHba, ok := hba.(*types.HostFibreChannelHba); ok {
+						linkStatus := 0.0
+						if fcHba.Status == "online" {
+							linkStatus = 1.0
+						}
+						wwn := fmt.Sprintf("%016x", fcHba.PortWorldWideName)
+						ch <- prometheus.MustNewConstMetric(
+							prometheus.NewDesc(
+								prometheus.BuildFQName(namespace, hostSubsystem, "fc_link_status"),
+								"Fibre Channel HBA link status (1=Online, 0=Offline)", nil,
+								map[string]string{
+									"hostmo":  host.Self.Value,
+									"host":    host.Summary.Config.Name,
+									"device":  fcHba.Device,
+									"vcenter": loginData["target"].(string),
+									"wwn":     wwn,
+									"status":  fcHba.Status,
+								},
+							), prometheus.GaugeValue, linkStatus,
+						)
+					}
+				}
+			}
 
 		}
 	}
