@@ -1,0 +1,906 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "panels": [],
+            "title": "SECTION 1 & 2: PHYSICAL NETWORK HEALTH & TRAFFIC",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        }
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "text": "DOWN"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "text": "UP"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Link State"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 8,
+                "x": 0,
+                "y": 1
+            },
+            "id": 10,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_nic_link_status{host=~\"$host\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Physical NIC Status",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {}
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "host": true,
+                            "hostmo": true,
+                            "vcenter": true
+                        },
+                        "indexByName": {
+                            "Value": 2,
+                            "device": 0,
+                            "speed": 1
+                        },
+                        "renameByName": {
+                            "Value": "Link State",
+                            "device": "NIC Name",
+                            "speed": "Speed"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisPlacement": "right",
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "showPoints": "never"
+                    },
+                    "unit": "decbps"
+                }
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 16,
+                "x": 8,
+                "y": 1
+            },
+            "id": 11,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_net_bytesRx_average{host=~\"$host\"} * 8",
+                    "legendFormat": "{{instance}} (RX)",
+                    "refId": "RX"
+                }
+            ],
+            "title": "NIC Incoming Traffic (RX) - Mbps",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisPlacement": "right",
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "showPoints": "never"
+                    },
+                    "unit": "decbps"
+                }
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 16,
+                "x": 8,
+                "y": 6
+            },
+            "id": 12,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_net_bytesTx_average{host=~\"$host\"} * 8",
+                    "legendFormat": "{{instance}} (TX)",
+                    "refId": "TX"
+                }
+            ],
+            "title": "NIC Outgoing Traffic (TX) - Mbps",
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 11
+            },
+            "id": 2,
+            "panels": [],
+            "title": "SECTION 3: HOST RESOURCE & ADAPTER SUMMARY",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "blue"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 12
+            },
+            "id": 21,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_nic_link_status{host=~\"$host\"})",
+                    "instant": true
+                }
+            ],
+            "title": "Total Phys NICs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "green"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 12
+            },
+            "id": 22,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_nic_link_status{host=~\"$host\"} == 1)",
+                    "instant": true
+                }
+            ],
+            "title": "NICs UP",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 12
+            },
+            "id": 23,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_nic_link_status{host=~\"$host\"} == 0) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "NICs DOWN",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "orange"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 12
+            },
+            "id": 24,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_fc_link_status{host=~\"$host\"}) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "Host HBA Count",
+            "type": "stat"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 16
+            },
+            "id": 4,
+            "panels": [],
+            "title": "SECTION 4: VIRTUAL MACHINE DISTRIBUTION",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "purple"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 0,
+                "y": 17
+            },
+            "id": 41,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_vm_info{hostmo=~\"$hostmo\"})",
+                    "instant": true
+                }
+            ],
+            "title": "Total VMs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "green"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 5,
+                "x": 4,
+                "y": 17
+            },
+            "id": 42,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_vm_power_state{hostmo=~\"$hostmo\"} == 1)",
+                    "instant": true
+                }
+            ],
+            "title": "Active VMs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "grey"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 5,
+                "x": 9,
+                "y": 17
+            },
+            "id": 43,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_vm_power_state{hostmo=~\"$hostmo\"} == 0) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "Powered-Off VMs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "light-blue"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 5,
+                "x": 14,
+                "y": 17
+            },
+            "id": 44,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_vm_info{hostmo=~\"$hostmo\", guest_os=~\"(?i).*windows.*\"}) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "Windows VMs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "yellow"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 5,
+                "x": 19,
+                "y": 17
+            },
+            "id": 45,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_vm_info{hostmo=~\"$hostmo\", guest_os=~\"(?i).*(debian|ubuntu|centos|linux|redhat).*\"}) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "Linux VMs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 24,
+                "x": 0,
+                "y": 21
+            },
+            "id": 46,
+            "options": {
+                "displayLabels": [
+                    "name",
+                    "percent"
+                ],
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "value"
+                    ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count by (guest_os) (vmware_vm_info{hostmo=~\"$hostmo\"})",
+                    "instant": true,
+                    "legendFormat": "{{guest_os}}"
+                }
+            ],
+            "title": "Guest OS Distribution Detail",
+            "type": "piechart"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 27
+            },
+            "id": 3,
+            "panels": [],
+            "title": "SECTION 5: VIRTUAL MACHINE INVENTORY (ON THIS HOST)",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        }
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "text": "STOPPED"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "text": "RUNNING"
+                                }
+                            },
+                            "type": "value"
+                        },
+                        {
+                            "options": {
+                                "poweredOff": {
+                                    "color": "red",
+                                    "text": "Powered Off"
+                                },
+                                "poweredOn": {
+                                    "color": "green",
+                                    "text": "Powered On"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ]
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Power State"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "OS State"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "RAM (MB)"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "decbytes"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 12,
+                "w": 24,
+                "x": 0,
+                "y": 28
+            },
+            "id": 31,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "vmware_vm_info{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "metadata"
+                },
+                {
+                    "expr": "vmware_vm_cpu_corecount{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "cpu"
+                },
+                {
+                    "expr": "vmware_vm_mem_capacity{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "mem"
+                },
+                {
+                    "expr": "vmware_vm_tools_running_status{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "tools"
+                }
+            ],
+            "title": "Virtual Machine Details",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {
+                        "keepLabels": [
+                            "vmmo"
+                        ]
+                    }
+                },
+                {
+                    "id": "seriesToColumns",
+                    "options": {
+                        "byField": "vmmo"
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "Time 1": true,
+                            "Time 2": true,
+                            "Time 3": true,
+                            "hostmo": true,
+                            "hostmo 1": true,
+                            "hostmo 2": true,
+                            "hostmo 3": true,
+                            "vcenter": true,
+                            "vcenter 1": true,
+                            "vcenter 2": true,
+                            "vcenter 3": true,
+                            "vm 1": true,
+                            "vm 2": true,
+                            "vm 3": true,
+                            "vmmo": true
+                        },
+                        "indexByName": {
+                            "vm": 0,
+                            "power_state": 1,
+                            "Value 3": 2,
+                            "Value 2": 3,
+                            "Value 1": 4,
+                            "guest_os": 5
+                        },
+                        "renameByName": {
+                            "Value 1": "CPU Cores",
+                            "Value 2": "RAM (MB)",
+                            "Value 3": "OS State",
+                            "guest_os": "Guest OS",
+                            "power_state": "Power State",
+                            "vm": "VM Name"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "tags": [
+        "vmware",
+        "host",
+        "pro",
+        "overview",
+        "standard"
+    ],
+    "templating": {
+        "list": [
+            {
+                "name": "datasource",
+                "query": "prometheus",
+                "refresh": 1,
+                "type": "datasource"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info, host)",
+                "name": "host",
+                "query": {
+                    "query": "label_values(vmware_host_info, host)"
+                },
+                "refresh": 1,
+                "type": "query"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info{host=\"$host\"}, hostmo)",
+                "hide": 2,
+                "name": "hostmo",
+                "query": {
+                    "query": "label_values(vmware_host_info{host=\"$host\"}, hostmo)"
+                },
+                "refresh": 1,
+                "type": "query"
+            }
+        ]
+    },
+    "title": "VMware Pro Host Overview (PRO Standard)",
+    "uid": "vmw-pro-host-std",
+    "version": 2
+}

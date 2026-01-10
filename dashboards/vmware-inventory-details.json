@@ -1,0 +1,633 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "links": [],
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 100,
+            "panels": [],
+            "title": "🚨 CRITICAL HARDWARE ALERTS",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "red"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "color-background"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": []
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Host (ESXi)"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "text"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 24,
+                "x": 0,
+                "y": 1
+            },
+            "id": 101,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "pluginVersion": "10.4.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_fc_link_status{vcenter=~\"$vcenter\"} == 0",
+                    "format": "table",
+                    "instant": true,
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "🚨 Critical: Failed FC Ports (One Row per Host)",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {}
+                },
+                {
+                    "id": "groupBy",
+                    "options": {
+                        "fields": {
+                            "device": {
+                                "aggregations": [
+                                    "allUnique"
+                                ],
+                                "operation": "aggregate"
+                            },
+                            "host": {
+                                "aggregations": [],
+                                "operation": "groupby"
+                            },
+                            "wwn": {
+                                "aggregations": [
+                                    "allUnique"
+                                ],
+                                "operation": "aggregate"
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Value": true,
+                            "vcenter": true,
+                            "status": true,
+                            "hostmo": true,
+                            "Time": true
+                        },
+                        "indexByName": {
+                            "device (allUnique)": 1,
+                            "host": 0,
+                            "wwn (allUnique)": 2
+                        },
+                        "renameByName": {
+                            "device (allUnique)": "Affected Port(s)",
+                            "host": "Host (ESXi)",
+                            "wwn (allUnique)": "Port WWN(s)"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 7
+            },
+            "id": 1,
+            "panels": [],
+            "title": "Network & VLAN Inventory",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "VLAN ID"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            },
+                            {
+                                "id": "color",
+                                "options": {
+                                    "mode": "fixed",
+                                    "fixedColor": "semi-transparent-blue"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "id": 2,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "pluginVersion": "10.4.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_portgroup_vlan{vcenter=~\"$vcenter\"}",
+                    "format": "table",
+                    "instant": true,
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "ESXi Host Port Groups & VLANs",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "vcenter": true,
+                            "hostmo": true
+                        },
+                        "indexByName": {
+                            "Value": 3,
+                            "host": 0,
+                            "portgroup": 1,
+                            "vswitch": 2
+                        },
+                        "renameByName": {
+                            "Value": "VLAN ID",
+                            "host": "Host",
+                            "portgroup": "Port Group",
+                            "vswitch": "vSwitch"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "id": 3,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "pluginVersion": "10.4.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_vm_network_info{vcenter=~\"$vcenter\"}",
+                    "format": "table",
+                    "instant": true,
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "VM Network & IP Mapping",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "Value": true,
+                            "connected": true,
+                            "hostmo": true,
+                            "vcenter": true,
+                            "vmmo": true
+                        },
+                        "indexByName": {
+                            "ip_address": 2,
+                            "mac_address": 3,
+                            "network": 1,
+                            "vm": 0
+                        },
+                        "renameByName": {
+                            "ip_address": "IP Address",
+                            "mac_address": "MAC Address",
+                            "network": "Network",
+                            "vm": "VM Name"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 18
+            },
+            "id": 10,
+            "panels": [],
+            "title": "Snapshot Health & Risk Tracker",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "color-background"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "orange",
+                                "value": 3
+                            },
+                            {
+                                "color": "red",
+                                "value": 7
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 19
+            },
+            "id": 11,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "pluginVersion": "10.4.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_vm_snapshot_age_days{vcenter=~\"$vcenter\"}",
+                    "format": "table",
+                    "instant": true,
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "VMs with Oldest Snapshots (Days)",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "hostmo": true,
+                            "vcenter": true,
+                            "vmmo": true
+                        },
+                        "indexByName": {
+                            "Value": 1,
+                            "vm": 0
+                        },
+                        "renameByName": {
+                            "Value": "Age (Days)",
+                            "vm": "VM Name"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "color-background"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "orange",
+                                "value": 5
+                            },
+                            {
+                                "color": "red",
+                                "value": 10
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 19
+            },
+            "id": 12,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "pluginVersion": "10.4.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_vm_snapshot_count{vcenter=~\"$vcenter\"} > 0",
+                    "format": "table",
+                    "instant": true,
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "VM Snapshot Count",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "hostmo": true,
+                            "vcenter": true,
+                            "vmmo": true
+                        },
+                        "indexByName": {
+                            "Value": 1,
+                            "vm": 0
+                        },
+                        "renameByName": {
+                            "Value": "Count",
+                            "vm": "VM Name"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        }
+    ],
+    "refresh": "1m",
+    "schemaVersion": 39,
+    "tags": [
+        "vmware",
+        "network",
+        "snapshot"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "text": "default",
+                    "value": "default"
+                },
+                "includeAll": false,
+                "name": "datasource",
+                "options": [],
+                "query": "prometheus",
+                "refresh": 1,
+                "regex": "",
+                "type": "datasource"
+            },
+            {
+                "current": {},
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info, vcenter)",
+                "hide": 0,
+                "includeAll": true,
+                "label": "vCenter IP",
+                "multi": false,
+                "name": "vcenter",
+                "options": [],
+                "query": {
+                    "query": "label_values(vmware_host_info, vcenter)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "VMware Advanced Inventory & Snapshots",
+    "uid": "vmw-adv-inv",
+    "version": 2,
+    "weekStart": ""
+}

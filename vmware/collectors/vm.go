@@ -69,42 +69,54 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 	wg := sync.WaitGroup{}
 
 	for _, vm := range vms {
+		vmNames[vm.Self.Value] = vm.Summary.Config.Name
 
+		powerStateValue := 0.0
 		if vm.Runtime.PowerState == "poweredOn" {
-
+			powerStateValue = 1.0
 			vmRefs = append(vmRefs, vm.Self)
+		}
 
-			vmNames[vm.Self.Value] = vm.Summary.Config.Name
+		// Metadata & Power State (ALL VMs)
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, vmSubsystem, "info"),
+				"Basic VM metadata", nil,
+				map[string]string{
+					"vmmo":        vm.Self.Value,
+					"vm":          vm.Summary.Config.Name,
+					"hostmo":      vm.Runtime.Host.Value,
+					"vcenter":     loginData["target"].(string),
+					"guest_os":    vm.Summary.Config.GuestFullName,
+					"power_state": string(vm.Runtime.PowerState),
+				},
+			), prometheus.GaugeValue, 1.0,
+		)
 
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, vmSubsystem, "info"),
-					"This is basic vm info to be used for parent reference", nil,
-					map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
-				), prometheus.GaugeValue, 1.0,
-			)
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, vmSubsystem, "power_state"),
+				"VM power state (1=poweredOn, 0=poweredOff/other)", nil,
+				map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
+			), prometheus.GaugeValue, powerStateValue,
+		)
 
-			//vmLabels := map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "vcenter": loginData["target"].(string)}
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, vmSubsystem, "cpu_corecount"),
+				"Number of virtual CPUs", nil, map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
+			), prometheus.GaugeValue, float64(vm.Summary.Config.NumCpu),
+		)
 
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, vmSubsystem, "cpu_corecount"),
-					"Number of virtual CPUs", nil, map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
-				), prometheus.GaugeValue, float64(vm.Summary.Config.NumCpu),
-			)
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, vmSubsystem, "mem_capacity"),
+				"Virtual memory configured in MB", nil, map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
+			), prometheus.GaugeValue, float64(vm.Summary.Config.MemorySizeMB),
+		)
 
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, vmSubsystem, "mem_capacity"),
-					"Virtual memory configured in MB", nil, map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
-				), prometheus.GaugeValue, float64(vm.Summary.Config.MemorySizeMB),
-			)
-
-			// New Metric: VMware Tools Status
-			toolsStatus := 0.0
-			if vm.Guest != nil && vm.Guest.ToolsRunningStatus == "guestToolsRunning" {
-				toolsStatus = 1.0
-			}
+		// 3. Conditional Metrics (Only for Powered On VMs)
+		if vm.Runtime.PowerState == "poweredOn" {
 			ch <- prometheus.MustNewConstMetric(
 				prometheus.NewDesc(
 					prometheus.BuildFQName(namespace, vmSubsystem, "tools_running_status"),

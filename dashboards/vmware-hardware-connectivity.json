@@ -1,0 +1,845 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "panels": [
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "green",
+                                    "index": 0,
+                                    "text": "✅ ALL CONNECTIVITY IS HEALTHY"
+                                }
+                            },
+                            "type": "value"
+                        },
+                        {
+                            "options": {
+                                "from": 1,
+                                "result": {
+                                    "color": "red",
+                                    "index": 1,
+                                    "text": "🚨 CONNECTIVITY ISSUES DETECTED – SEE DETAILS BELOW"
+                                },
+                                "to": 9999
+                            },
+                            "type": "range"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 100,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "textMode": "value"
+            },
+            "pluginVersion": "10.4.0",
+            "targets": [
+                {
+                    "expr": "(sum(vmware_host_nic_link_status{vcenter=~\"$vcenter\"} == 0) or vector(0)) + (sum(vmware_host_fc_link_status{vcenter=~\"$vcenter\"} == 0) or vector(0))",
+                    "instant": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "",
+            "type": "stat"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 3
+            },
+            "id": 1,
+            "panels": [],
+            "title": "SECTION 1: SYSTEM OVERVIEW (HIGH LEVEL)",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "blue"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 0,
+                "y": 4
+            },
+            "id": 10,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_nic_link_status{vcenter=~\"$vcenter\"})",
+                    "instant": true
+                }
+            ],
+            "title": "Total NICs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "green"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 3,
+                "y": 4
+            },
+            "id": 11,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_nic_link_status{vcenter=~\"$vcenter\"} == 1)",
+                    "instant": true
+                }
+            ],
+            "title": "NICs UP",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 6,
+                "y": 4
+            },
+            "id": 12,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_nic_link_status{vcenter=~\"$vcenter\"} == 0) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "NICs DOWN",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 90
+                            },
+                            {
+                                "color": "green",
+                                "value": 99.9
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 9,
+                "y": 4
+            },
+            "id": 13,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "(count(vmware_host_nic_link_status{vcenter=~\"$vcenter\"} == 1) / count(vmware_host_nic_link_status{vcenter=~\"$vcenter\"})) * 100",
+                    "instant": true
+                }
+            ],
+            "title": "NIC Health",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "blue"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 12,
+                "y": 4
+            },
+            "id": 20,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_fc_link_status{vcenter=~\"$vcenter\"})",
+                    "instant": true
+                }
+            ],
+            "title": "Total FCs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "green"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 15,
+                "y": 4
+            },
+            "id": 21,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_fc_link_status{vcenter=~\"$vcenter\"} == 1)",
+                    "instant": true
+                }
+            ],
+            "title": "FCs UP",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 18,
+                "y": 4
+            },
+            "id": 22,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(vmware_host_fc_link_status{vcenter=~\"$vcenter\"} == 0) or vector(0)",
+                    "instant": true
+                }
+            ],
+            "title": "FCs DOWN",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 90
+                            },
+                            {
+                                "color": "green",
+                                "value": 99.9
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 21,
+                "y": 4
+            },
+            "id": 23,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "(count(vmware_host_fc_link_status{vcenter=~\"$vcenter\"} == 1) / count(vmware_host_fc_link_status{vcenter=~\"$vcenter\"})) * 100",
+                    "instant": true
+                }
+            ],
+            "title": "FC Health",
+            "type": "gauge"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 8
+            },
+            "id": 2,
+            "panels": [],
+            "title": "SECTION 2: HOST CONNECTIVITY SUMMARY (QUICK TRIAGE)",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "center",
+                        "cellOptions": {
+                            "type": "color-background"
+                        }
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "text": "🛑 ISSUE"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "text": "✅ ALL UP"
+                                }
+                            },
+                            "type": "value"
+                        },
+                        {
+                            "options": {
+                                "from": 0,
+                                "result": {
+                                    "color": "red",
+                                    "text": "💥 CRITICAL"
+                                },
+                                "to": 0.9
+                            },
+                            "type": "range"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Host"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "text"
+                                }
+                            },
+                            {
+                                "id": "custom.align",
+                                "options": "left"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Overall Health"
+                        },
+                        "properties": [
+                            {
+                                "id": "mappings",
+                                "options": [
+                                    {
+                                        "options": {
+                                            "0": {
+                                                "color": "red",
+                                                "text": "CRITICAL"
+                                            },
+                                            "1": {
+                                                "color": "green",
+                                                "text": "HEALTHY"
+                                            }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 9
+            },
+            "id": 30,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "min by (host) (vmware_host_nic_link_status{vcenter=~\"$vcenter\"})",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "NIC"
+                },
+                {
+                    "expr": "min by (host) (vmware_host_fc_link_status{vcenter=~\"$vcenter\"})",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "FC"
+                },
+                {
+                    "expr": "min by (host) (vmware_host_nic_link_status{vcenter=~\"$vcenter\"}) * min by (host) (vmware_host_fc_link_status{vcenter=~\"$vcenter\"})",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "OVERALL"
+                }
+            ],
+            "title": "Triage: Connectivity Status per Host",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {}
+                },
+                {
+                    "id": "merge",
+                    "options": {}
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "vcenter": true
+                        },
+                        "indexByName": {
+                            "Value #FC": 2,
+                            "Value #NIC": 1,
+                            "Value #OVERALL": 3,
+                            "host": 0
+                        },
+                        "renameByName": {
+                            "Value #FC": "FC Status",
+                            "Value #NIC": "NIC Status",
+                            "Value #OVERALL": "Overall Health",
+                            "host": "Host"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "collapsed": true,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 17
+            },
+            "id": 3,
+            "panels": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "fixed",
+                                "fixedColor": "red"
+                            },
+                            "custom": {
+                                "cellOptions": {
+                                    "type": "color-background"
+                                }
+                            },
+                            "mappings": [
+                                {
+                                    "options": {
+                                        "0": {
+                                            "color": "red",
+                                            "index": 0,
+                                            "text": "DOWN"
+                                        }
+                                    },
+                                    "type": "value"
+                                }
+                            ]
+                        }
+                    },
+                    "gridPos": {
+                        "h": 6,
+                        "w": 12,
+                        "x": 0,
+                        "y": 18
+                    },
+                    "id": 40,
+                    "options": {
+                        "showHeader": true
+                    },
+                    "targets": [
+                        {
+                            "expr": "vmware_host_nic_link_status{vcenter=~\"$vcenter\"} == 0",
+                            "format": "table",
+                            "instant": true
+                        }
+                    ],
+                    "title": "NIC DETAIL: EXCEPTIONS ONLY (DOWN PORTS)",
+                    "transformations": [
+                        {
+                            "id": "organize",
+                            "options": {
+                                "excludeByName": {
+                                    "Time": true,
+                                    "hostmo": true,
+                                    "instance": true,
+                                    "job": true,
+                                    "vcenter": true
+                                },
+                                "indexByName": {
+                                    "host": 0,
+                                    "device": 1,
+                                    "Value": 2
+                                },
+                                "renameByName": {
+                                    "device": "Port",
+                                    "host": "Hostname",
+                                    "Value": "Status"
+                                }
+                            }
+                        }
+                    ],
+                    "type": "table"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "fixed",
+                                "fixedColor": "red"
+                            },
+                            "custom": {
+                                "cellOptions": {
+                                    "type": "color-background"
+                                }
+                            },
+                            "mappings": [
+                                {
+                                    "options": {
+                                        "0": {
+                                            "color": "red",
+                                            "index": 0,
+                                            "text": "OFFLINE"
+                                        }
+                                    },
+                                    "type": "value"
+                                }
+                            ]
+                        }
+                    },
+                    "gridPos": {
+                        "h": 6,
+                        "w": 12,
+                        "x": 12,
+                        "y": 18
+                    },
+                    "id": 41,
+                    "options": {
+                        "showHeader": true
+                    },
+                    "targets": [
+                        {
+                            "expr": "vmware_host_fc_link_status{vcenter=~\"$vcenter\"} == 0",
+                            "format": "table",
+                            "instant": true
+                        }
+                    ],
+                    "title": "FC DETAIL: EXCEPTIONS ONLY (DOWN PORTS)",
+                    "transformations": [
+                        {
+                            "id": "organize",
+                            "options": {
+                                "excludeByName": {
+                                    "Time": true,
+                                    "hostmo": true,
+                                    "status": true,
+                                    "wwn": true,
+                                    "instance": true,
+                                    "job": true,
+                                    "vcenter": true
+                                },
+                                "indexByName": {
+                                    "host": 0,
+                                    "device": 1,
+                                    "Value": 2
+                                },
+                                "renameByName": {
+                                    "device": "Port",
+                                    "host": "Hostname",
+                                    "Value": "Status"
+                                }
+                            }
+                        }
+                    ],
+                    "type": "table"
+                }
+            ],
+            "title": "SECTION 3 & 4: CONNECTIVITY EXCEPTIONS (DETAILS)",
+            "type": "row"
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "tags": [
+        "vmware",
+        "ops",
+        "connectivity",
+        "noc"
+    ],
+    "templating": {
+        "list": [
+            {
+                "name": "datasource",
+                "query": "prometheus",
+                "refresh": 1,
+                "type": "datasource"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info, vcenter)",
+                "name": "vcenter",
+                "query": {
+                    "query": "label_values(vmware_host_info, vcenter)"
+                },
+                "refresh": 1,
+                "type": "query"
+            }
+        ]
+    },
+    "title": "VMware Hardware Connectivity (OPERATIONAL)",
+    "uid": "vmw-hw-ops",
+    "version": 4
+}

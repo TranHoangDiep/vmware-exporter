@@ -167,14 +167,22 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 			if host.Config != nil && host.Config.Network != nil {
 				for _, pnic := range host.Config.Network.Pnic {
 					linkStatus := 0.0
+					speed := "Unknown"
 					if pnic.LinkSpeed != nil {
 						linkStatus = 1.0
+						speed = fmt.Sprintf("%d Mbps", pnic.LinkSpeed.SpeedMb)
 					}
 					ch <- prometheus.MustNewConstMetric(
 						prometheus.NewDesc(
 							prometheus.BuildFQName(namespace, hostSubsystem, "nic_link_status"),
 							"Physical NIC link status (1=Up, 0=Down)", nil,
-							map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "device": pnic.Device, "vcenter": loginData["target"].(string)},
+							map[string]string{
+								"hostmo":  host.Self.Value,
+								"host":    host.Summary.Config.Name,
+								"device":  pnic.Device,
+								"vcenter": loginData["target"].(string),
+								"speed":   speed,
+							},
 						), prometheus.GaugeValue, linkStatus,
 					)
 				}
