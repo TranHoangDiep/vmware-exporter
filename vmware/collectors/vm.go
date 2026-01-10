@@ -115,6 +115,12 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 			), prometheus.GaugeValue, float64(vm.Summary.Config.MemorySizeMB),
 		)
 
+		// New Metric: VMware Tools Status
+		toolsStatus := 0.0
+		if vm.Guest != nil && vm.Guest.ToolsRunningStatus == "guestToolsRunning" {
+			toolsStatus = 1.0
+		}
+
 		// 3. Conditional Metrics (Only for Powered On VMs)
 		if vm.Runtime.PowerState == "poweredOn" {
 			ch <- prometheus.MustNewConstMetric(
