@@ -70,7 +70,7 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 	wg := sync.WaitGroup{}
 
 	for _, host := range hosts {
-
+		c.logger.Debug("msg", "Processing host", "name", host.Summary.Config.Name, "powerState", host.Runtime.PowerState)
 		hostNames[host.Self.Value] = host.Summary.Config.Name
 
 		// 1. Basic Info & Hardware (Exported for ALL hosts)
@@ -106,16 +106,26 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 		// 2. Power State Metric (Crucial for Down detection)
 		powerState := 0.0
-		if host.Runtime.PowerState == "poweredOn" {
+		switch host.Runtime.PowerState {
+		case "poweredOn":
 			powerState = 1.0
-		} else if host.Runtime.PowerState == "standBy" {
+		case "standBy":
 			powerState = 2.0
+		default:
+			powerState = 0.0 // poweredOff or unknown
 		}
+
+		c.logger.Info("msg", "Exporting power_state", "host", host.Summary.Config.Name, "value", powerState)
+
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, hostSubsystem, "power_state"),
-				"Host power state (1=poweredOn, 0=poweredOff, 2=standBy)", nil, hostLabels,
-			), prometheus.GaugeValue, powerState,
+				"Host power state (1=poweredOn, 0=poweredOff, 2=standBy)",
+				[]string{"hostmo", "host", "vcenter"}, nil,
+			),
+			prometheus.GaugeValue,
+			powerState,
+			host.Self.Value, host.Summary.Config.Name, loginData["target"].(string),
 		)
 
 		ch <- prometheus.MustNewConstMetric(
@@ -166,6 +176,25 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 							"Physical NIC link status (1=Up, 0=Down)", nil,
 							map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "device": pnic.Device, "vcenter": loginData["target"].(string)},
 						), prometheus.GaugeValue, linkStatus,
+					)
+				}
+			}
+
+			// PortGroup VLAN IDs
+			if host.Config != nil && host.Config.Network != nil {
+				for _, pg := range host.Config.Network.Portgroup {
+					ch <- prometheus.MustNewConstMetric(
+						prometheus.NewDesc(
+							prometheus.BuildFQName(namespace, hostSubsystem, "portgroup_vlan"),
+							"Host PortGroup VLAN ID", nil,
+							map[string]string{
+								"hostmo":    host.Self.Value,
+								"host":      host.Summary.Config.Name,
+								"portgroup": pg.Spec.Name,
+								"vswitch":   pg.Spec.VswitchName,
+								"vcenter":   loginData["target"].(string),
+							},
+						), prometheus.GaugeValue, float64(pg.Spec.VlanId),
 					)
 				}
 			}
@@ -232,7 +261,5 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 		wg.Wait()
 	}
-	c.logger.Debug("msg", fmt.Sprintf("Time to process PerfMan for Host: %f\n", time.Since(begin).Seconds()), nil)
-
 	return nil
 }

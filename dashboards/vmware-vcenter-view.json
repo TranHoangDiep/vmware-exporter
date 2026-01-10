@@ -835,11 +835,8 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "left",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
+            "align": "auto",
+            "displayMode": "auto",
             "inspect": false
           },
           "mappings": [],
@@ -848,45 +845,77 @@
             "steps": [
               {
                 "color": "green",
-                "value": 0
+                "value": null
               }
             ]
-          },
-          "unit": "none"
+          }
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "CPU"
+              "options": "NIC Status"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 172
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "Down"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "Up"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Server"
+              "options": "FC Status"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 195
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Host"
-            },
-            "properties": [
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "Offline"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "Online"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
               {
-                "id": "custom.width"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
               }
             ]
           },
@@ -899,10 +928,6 @@
               {
                 "id": "unit",
                 "value": "hertz"
-              },
-              {
-                "id": "custom.width",
-                "value": 80
               }
             ]
           },
@@ -915,10 +940,6 @@
               {
                 "id": "unit",
                 "value": "bytes"
-              },
-              {
-                "id": "custom.width",
-                "value": 87
               }
             ]
           },
@@ -931,102 +952,16 @@
               {
                 "id": "unit",
                 "value": "s"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Cores"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 74
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "OS"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 235
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "host"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": true,
-                    "title": "$host",
-                    "url": "/d/VMwExHoV/host-view?${__url_time_range}&${datasource:queryparam}&${job:queryparam}&${vcenter:queryparam}&${datacenter:queryparam}&${dcmo:queryparam}&${dchostfolder:queryparam}&${computemo:queryparam}&${cluster:queryparam}&${clustermo:queryparam}&var-host=${__data.fields.Host}"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #HT"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "1": {
-                        "color": "orange",
-                        "index": 0,
-                        "text": "No"
-                      },
-                      "2": {
-                        "color": "green",
-                        "index": 1,
-                        "text": "Yes"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "HT"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 58
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 10,
-        "w": 18,
-        "x": 6,
-        "y": 4
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 12
       },
       "id": 36,
       "interval": "20s",
@@ -1128,6 +1063,26 @@
           "format": "table",
           "instant": true,
           "refId": "HT"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(min(vmware_host_nic_link_status{vcenter=~\"$vcenter\"}) by (hostmo)) by (hostmo)",
+          "format": "table",
+          "instant": true,
+          "refId": "NIC"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(min(vmware_host_fc_link_status{vcenter=~\"$vcenter\"}) by (hostmo)) by (hostmo)",
+          "format": "table",
+          "instant": true,
+          "refId": "FC"
         }
       ],
       "title": "Hosts Inventory",
@@ -1151,7 +1106,9 @@
               "vcenter": true
             },
             "indexByName": {
+              "Value #FC": 10,
               "Value #HT": 6,
+              "Value #NIC": 9,
               "Value #core speed": 4,
               "Value #cores": 3,
               "Value #ram": 5,
@@ -1162,7 +1119,9 @@
               "os": 8
             },
             "renameByName": {
+              "Value #FC": "FC Status",
               "Value #HT": "HT",
+              "Value #NIC": "NIC Status",
               "Value #core speed": "Speed",
               "Value #cores": "Cores",
               "Value #ram": "RAM",

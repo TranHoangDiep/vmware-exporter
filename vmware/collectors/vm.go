@@ -124,10 +124,15 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 				)
 			}
 
-			// New Metric: Snapshot Count
+			// New Metric: Snapshot Count & Age
 			snapshotCount := 0.0
+			snapshotAgeDays := 0.0
 			if vm.Snapshot != nil && vm.Snapshot.RootSnapshotList != nil {
-				snapshotCount = countSnapshots(vm.Snapshot.RootSnapshotList)
+				var oldest time.Time
+				snapshotCount = getSnapshotInfo(vm.Snapshot.RootSnapshotList, &oldest)
+				if !oldest.IsZero() {
+					snapshotAgeDays = time.Since(oldest).Hours() / 24.0
+				}
 			}
 			ch <- prometheus.MustNewConstMetric(
 				prometheus.NewDesc(
@@ -136,6 +141,42 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 					map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
 				), prometheus.GaugeValue, snapshotCount,
 			)
+
+			if snapshotCount > 0 {
+				ch <- prometheus.MustNewConstMetric(
+					prometheus.NewDesc(
+						prometheus.BuildFQName(namespace, vmSubsystem, "snapshot_age_days"),
+						"Age of the oldest snapshot in days", nil,
+						map[string]string{"vmmo": vm.Self.Value, "vm": vm.Summary.Config.Name, "hostmo": vm.Runtime.Host.Value, "vcenter": loginData["target"].(string)},
+					), prometheus.GaugeValue, snapshotAgeDays,
+				)
+			}
+
+			// New Metric: VM Network Info (IPs and MACs)
+			if vm.Guest != nil {
+				for _, nic := range vm.Guest.Net {
+					ip := "-"
+					if len(nic.IpAddress) > 0 {
+						ip = nic.IpAddress[0]
+					}
+					ch <- prometheus.MustNewConstMetric(
+						prometheus.NewDesc(
+							prometheus.BuildFQName(namespace, vmSubsystem, "network_info"),
+							"VM network interface info", nil,
+							map[string]string{
+								"vmmo":        vm.Self.Value,
+								"vm":          vm.Summary.Config.Name,
+								"hostmo":      vm.Runtime.Host.Value,
+								"vcenter":     loginData["target"].(string),
+								"network":     nic.Network,
+								"mac_address":  nic.MacAddress,
+								"ip_address":   ip,
+								"connected":   fmt.Sprintf("%t", nic.Connected),
+							},
+						), prometheus.GaugeValue, 1.0,
+					)
+				}
+			}
 
 			for _, datastore := range vm.Storage.PerDatastoreUsage {
 
@@ -189,13 +230,16 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 	return nil
 }
 
-// Helper function to count snapshots recursively
-func countSnapshots(snapshots []types.VirtualMachineSnapshotTree) float64 {
+// Helper function to count snapshots and find oldest creation time
+func getSnapshotInfo(snapshots []types.VirtualMachineSnapshotTree, oldest *time.Time) float64 {
 	count := 0.0
 	for _, snap := range snapshots {
 		count++
+		if oldest.IsZero() || snap.CreateTime.Before(*oldest) {
+			*oldest = snap.CreateTime
+		}
 		if snap.ChildSnapshotList != nil {
-			count += countSnapshots(snap.ChildSnapshotList)
+			count += getSnapshotInfo(snap.ChildSnapshotList, oldest)
 		}
 	}
 	return count
