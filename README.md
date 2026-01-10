@@ -1,46 +1,67 @@
+# VMware Exporter (Bản Go)
 
-# vmware-exporter
+Đây là trình thu thập dữ liệu (exporter) cho Prometheus, giúp lấy dữ liệu từ hệ thống VMware vSphere/vCenter. Exporter này được tối ưu bằng ngôn ngữ Go, có hiệu năng cao và hỗ trợ nhiều vCenter cùng lúc.
 
-This is a simple prometheus exporter that collects various metrics from a vCenter. 
+## 🚀 Cách sử dụng nhanh (Docker Compose)
 
+Để giám sát nhiều vCenter với các thông tin đăng nhập khác nhau, chúng ta sử dụng `docker-compose.yml` để chạy nhiều instance của exporter.
 
-## How to use
+### 1. Cấu hình vCenter
+Mở file `docker-compose.yml` và chỉnh sửa thông tin cho từng service:
 
-Run the exporter in a docker container (or start as a process) with all the settings necessary. Scrape it..
+```yaml
+services:
+  vcenter-01:
+    image: lam86/vmware-exporter:latest
+    ports:
+      - "9169:9169" # Cổng cho vCenter 01
+    command:
+      - "-vmware.vcenter=10.10.x.x"
+      - "-vmware.username=administrator@vsphere.local"
+      - "-vmware.password=MAT_KHAU_CUA_BAN"
+      # ... cấu hình collector ...
 
-Exporter scrapes single vCenter host when /metrics path is used. Multiple vCenter hosts can be scraped using /probe, however these vCenter hosts must share credentials.
+  vcenter-02:
+    image: lam86/vmware-exporter:latest
+    ports:
+      - "9170:9169" # Cổng cho vCenter 02
+    command:
+      - "-vmware.vcenter=10.10.y.y"
+      - "-vmware.username=administrator@vsphere.local"
+      - "-vmware.password=MAT_KHAU_KHAC"
+      # ... cấu hình collector ...
+```
 
-### Settings 
+### 2. Khởi động
+```bash
+docker-compose up -d
+```
 
-The exporter can be configured via command line options, environment variables, a yaml config file or a combination of all three. The environment variables set will be overwritten by the contents of the config file, which then will be overwritten by any command line option set at startup. 
-The options available are:
+### 3. Kiểm tra dữ liệu
+Sau khi khởi động, bạn có thể truy cập các địa chỉ sau để xem metrics:
+*   **vCenter 01:** `http://<IP_Server>:9169/metrics`
+*   **vCenter 02:** `http://<IP_Server>:9170/metrics`
 
-| key | description |
-| --- | ----------- |
-| -envflag.enable | Tells the exporter to use enviromnent flags in its configuration |
-| -envflag.prefix | This allows to prefix the environment variables that will be used for configuration | 
-| -file | Path to a yaml configuration file that follows the structure of command line options |
-| -http.address | The address and port the exporter will bind to in host:port format (default: ":9169") |
-| -log.format | Can be either json or logfmt (default: logfmt) |
-| -log.level | One of debug,info,warn or error (default: debug) - Don't expect much..|
-| -prom.maxRequests | Max concurrent scrape requests (default: 20) |
-| -disable.exporter.metrics | Disables exporter process metrics |
-| -disable.exporter.target | Disables exporter default target - /metrics will only return exporter data - use /probe |
-| -disable.default.collectors | Disables all collectors enabled by default |
-| -collector.datacenter | Enables or disables DataCenter metrics collection (default: enabled) |
-| -collector.cluster | Enables or disables Cluster metrics collection (default: enabled) |
-| -collector.datastore | Enables or disables Datastore metrics collection (default: enabled) |
-| -collector.host | Enables or disables Host metrics collection (default: enabled) |
-| -collector.vm | Enables or disables Virtual Machine metrics collection (default: enabled) |
-| -collector.esxcli.host.nic | Collects ESXi NIC firmware information using esxcli invoked through the vCenter (default: disabled) |
-| -collector.esxcli.storage | Collects ESXi storage firmware information using esxcli invoked through the vCenter (default: disabled) |
-| -vmware.granularity | The frequency of the sampled data. Default is 20s (default 20) |
-| -vmware.insecureTLS | Trust insecure vCenter TLS (true) or verify (default) |
-| -vmware.interval | How often data will be collected. Default is every 20s. (default 20) |
-| -vmware.password | Password for the user above |
-| -vmware.schema | Use HTTP or HTTPS (default "https") |
-| -vmware.username | Username to login to vCenter server |
-| -vmware.vcenter | vCenter server address in host:port format. This is not the vCenter Management Console |
+## 📊 Các Collector hỗ trợ
 
+| Tham số | Chức năng (Bật: true, Tắt: false) |
+| :--- | :--- |
+| `-collector.vm` | Thu thập metrics Máy ảo (CPU, RAM, Disk, Uptime, Tools, Snapshot...) |
+| `-collector.host` | Thu thập metrics Máy chủ vật lý (Hardware info, CPU model, RAM...) |
+| `-collector.datastore` | Thu thập metrics Ổ cứng lưu trữ (Capacity, Free space...) |
+| `-collector.cluster` | Thu thập metrics Cluster (Cụm máy chủ) |
+| `-collector.datacenter` | Thu thập metrics Datacenter |
+| `-collector.esxcli.host.nic` | Thu thập thông tin Firmware NIC của ESXi (via ESXCLI) |
+| `-collector.esxcli.storage` | Thu thập thông tin Firmware Storage của ESXi (via ESXCLI) |
 
-The esxcli collectors are a very specific use case that probably is not going to be needed by anyone. Left the code in here as an example on how custom information can be collected using esxcli command tool remotely via vCenter SOAP API 
+## 🛠️ Các tham số quan trọng khác
+
+*   `-vmware.insecureTLS=true`: Bỏ qua xác thực chứng chỉ SSL (thường dùng cho các vCenter dùng cert tự ký).
+*   `-vmware.interval=20`: Chu kỳ thu thập dữ liệu (mặc định 20 giây).
+*   `-log.level=info`: Mức độ ghi log (debug, info, warn, error).
+
+## ⚠️ Lưu ý khi gặp lỗi
+Nếu exporter báo lỗi `lookup ... no such host`, hãy kiểm tra:
+1.  Địa chỉ IP của vCenter trong file cấu hình có chứa ký tự lạ không (ví dụ: dư chữ `v` ở đầu).
+2.  Khả năng kết nối mạng từ máy chạy Docker tới IP vCenter.
+3.  Đảm bảo mật khẩu không chứa các ký tự đặc biệt lồng nhau nếu không được đặt trong dấu ngoặc kép.

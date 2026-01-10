@@ -1,17 +1,16 @@
 version: '3.8'
 
 services:
-  vmware-exporter:
-    # Build từ source code hiện tại (.)
-    build: .
-    image: vmware-exporter:latest
-    container_name: vmware-exporter
+  # --- VCENTER 01 ---
+  vcenter-01:
+    image: lam86/vmware-exporter:latest
+    container_name: vmware-exporter-v01
     restart: unless-stopped
     ports:
       - "9169:9169"
     command:
-      # --- Cấu hình kết nối vCenter ---
-      - "-vmware.vcenter=vcenter.example.com"       # Đổi thành địa chỉ IP/FQDN vCenter của bạn
+      # --- Cấu hình kết nối vCenter 01 ---
+      - "-vmware.vcenter=vcenter-01.example.com"       # Đổi thành địa chỉ IP/FQDN vCenter của bạn
       - "-vmware.username=administrator@vsphere.local" # User vCenter
       - "-vmware.password=YOUR_PASSWORD_HERE"       # Mật khẩu vCenter
       - "-vmware.insecureTLS=true"                  # Bỏ qua xác thực SSL (True nếu dùng Self-signed cert)
@@ -36,7 +35,36 @@ services:
       
       - "-collector.datacenter=true" 
       # [BAT: TRUE] Thu thập metrics Datacenter
+
+      - "-collector.esxcli.host.nic=true"
+      # [BAT: TRUE] Thu thập thông tin Firmware NIC của ESXi (via ESXCLI)
       
-      # --- Các cấu hình nâng cao khác ---
-      # - "-log.level=debug"         # Bật log debug nếu cần sửa lỗi
-      # - "-vmware.interval=20"      # Chu kỳ lấy dữ liệu (giây), mặc định 20s
+      - "-collector.esxcli.storage=true"
+      # [BAT: TRUE] Thu thập thông tin Firmware Storage của ESXi (via ESXCLI)
+      
+      - "-vmware.interval=20"      # Chu kỳ lấy dữ liệu (giây), mặc định 20s
+
+  # --- VCENTER 02 ---
+  vcenter-02:
+    image: lam86/vmware-exporter:latest
+    container_name: vmware-exporter-v02
+    restart: unless-stopped
+    ports:
+      - "9170:9169"
+    command:
+      # --- Cấu hình kết nối vCenter 02 ---
+      - "-vmware.vcenter=vcenter-02.example.com"       # Đổi thành địa chỉ IP/FQDN vCenter của bạn
+      - "-vmware.username=administrator@vsphere.local" # User vCenter
+      - "-vmware.password=YOUR_PASSWORD_HERE"       # Mật khẩu vCenter
+      - "-vmware.insecureTLS=true"                  # Bỏ qua xác thực SSL (True nếu dùng Self-signed cert)
+      
+      # --- Cấu hình các Collector ---
+      - "-collector.vm=true"         
+      - "-collector.host=true"       
+      - "-collector.datastore=true"  
+      - "-collector.cluster=true"    
+      - "-collector.datacenter=true" 
+      - "-collector.esxcli.host.nic=true"
+      - "-collector.esxcli.storage=true"
+      
+      - "-vmware.interval=20"      # Chu kỳ lấy dữ liệu (giây), mặc định 20s
