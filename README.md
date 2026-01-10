@@ -1,77 +1,90 @@
-# 🛰️ VMware Prometheus Exporter (Multi-vCenter Edition)
+# 🛰️ VMware Prometheus Exporter (Custom Version)
 
-Bộ công cụ giám sát VMware vSphere chuyên nghiệp, hỗ trợ giám sát đa vCenter, theo dõi trạng thái Port mạng (NIC), Port quang (FC) và tích hợp hệ thống cảnh báo tự động.
-
----
-
-## ✨ Tính năng nổi bật
-
-- 🏢 **Multi-vCenter**: Giám sát nhiều vCenter cùng lúc bằng Docker Compose.
-- 🔌 **Link Status Monitoring**: 
-  - Theo dõi trạng thái kết nối vật lý của **NIC (vmnic)**.
-  - Theo dõi trạng thái **Fibre Channel (FC HBA)** kèm mã **WWN**.
-- 🛠 **ESXCLI Integration**: Thu thập thông tin Driver và Firmware của thiết bị lưu trữ và mạng.
-- ⏱️ **Zero Timeout**: Cấu hình tối ưu (300s) giúp tránh lỗi timeout khi lấy dữ liệu từ các hệ thống ESXi chậm.
-- 🚨 **Alerting Ready**: Đi kèm bộ quy tắc cảnh báo (Alert Rules) cho Prometheus.
-- 📊 **Dashboard Toàn diện**: Hỗ trợ đầy đủ các View cho vCenter, Cluster, Host, Datastore và VM.
+Phiên bản tùy chỉnh của VMware Exporter hỗ trợ giám sát đa vCenter, theo dõi trạng thái Port mạng (NIC), Port quang (FC) và tích hợp ESXCLI Firmware.
 
 ---
 
-## 🚀 Hướng dẫn nhanh
+## 🛠 Hướng dẫn Build và Chạy (Local Build)
 
-### 1. Chuẩn bị cấu hình
-Mở file `docker-compose.yml` và cập nhật thông tin vCenter của bạn:
+Vì mã nguồn đã được tùy chỉnh để thêm các tính năng giám sát Port vật lý, bạn cần build image trực tiếp từ thư mục này thay vì dùng image trên Docker Hub.
 
-```yaml
-      - "-vmware.vcenter=vcenter-01.example.com"
-      - "-vmware.username=administrator@vsphere.local"
-      - "-vmware.password=MẬT_KHẨU_CỦA_BẠN"
-```
+### 1. Cấu hình vCenter
+Mở file `docker-compose.yml` và điền thông tin vCenter cũng như mật khẩu của bạn.
 
-### 2. Khởi chạy với Docker
+### 2. Build và Khởi động
+Sử dụng lệnh sau để Docker tự động biên dịch lại code Go và khởi chạy container:
+
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-### 3. Kiểm tra dữ liệu
-Các dịch vụ sẽ chạy trên các cổng mặc định:
-- **vCenter 01**: `http://<Server_IP>:9169/metrics`
-- **vCenter 02**: `http://<Server_IP>:9170/metrics`
+- `--build`: Ép Docker build lại image từ source code hiện tại (Dockerfile).
+- `-d`: Chạy dưới nền (detached mode).
+
+### 3. Kiểm tra trạng thái
+```bash
+docker compose ps
+```
 
 ---
 
-## 🚨 Hệ thống Cảnh báo (Alerting)
+## 📊 Danh sách Metrics chính
 
-Tôi đã chuẩn bị sẵn file `prometheus-alerts.yml`. Bạn hãy thêm vào cấu hình Prometheus để nhận cảnh báo khi:
-- **Host Down**: Host mất kết nối hoặc bị tắt.
-- **Port Down (NIC/FC)**: Rớt cáp mạng hoặc mất kết nối quang SAN (Cực kỳ quan trọng).
-- **Datastore Full**: Ổ cứng đầy trên 90%.
-- **Snapshot Overload**: Máy ảo có quá nhiều snapshot gây chậm hệ thống.
+Dưới đây là các thông số quan trọng nhất mà bộ sưu tập này cung cấp:
 
----
-
-## 📊 Grafana Dashboards
-
-Mọi dữ liệu thu thập được có thể hiển thị sinh động qua các Dashboard trong thư mục `/dashboards`:
-1.  **Host View**: Xem chi tiết tài nguyên, CPU Overcommit và trạng thái Port.
-2.  **ESXCLI View**: Xem phiên bản Driver/Firmware của card mạng và card quang.
-3.  **VM View**: Theo dõi hiệu năng chi tiết từng máy ảo.
-
----
-
-## 🛠 Các Metric Quan trọng mới add
-
+### 1. Giám sát Port vật lý (Mới cập nhật)
 | Metric | Ý nghĩa | Trạng thái |
 | :--- | :--- | :--- |
-| `vmware_host_nic_link_status` | Trạng thái port mạng | 1: Up, 0: Down |
-| `vmware_host_fc_link_status` | Trạng thái port quang FC | 1: Online, 0: Offline |
-| `vmware_host_fc_link_status{wwn="..."}` | WWN của port quang | Giúp đối chiếu SAN Switch |
+| `vmware_host_nic_link_status` | Trạng thái vật lý của Card mạng (vmnic) | 1: Up, 0: Down |
+| `vmware_host_fc_link_status` | Trạng thái vật lý của Card quang (FC HBA) | 1: Online, 0: Offline |
+
+### 2. Giám sát Host (ESXi)
+| Metric | Ý nghĩa |
+| :--- | :--- |
+| `vmware_host_power_state` | Trạng thái nguồn (1: On, 0: Off, 2: Standby) |
+| `vmware_host_cpu_usagemhz_average` | Lượng CPU đang sử dụng (MHz) |
+| `vmware_host_mem_consumed_average` | Lượng RAM đang sử dụng (KB) |
+| `vmware_host_cpu_capacity` | Tổng tần số CPU của Host |
+| `vmware_host_info` | Thông tin chung (Version, Model, Vendor) |
+
+### 3. Giám sát Datastore (Storage)
+| Metric | Ý nghĩa |
+| :--- | :--- |
+| `vmware_datastore_capacity` | Tổng dung lượng ổ đĩa (Bytes) |
+| `vmware_datastore_free` | Dung lượng còn trống (Bytes) |
+| `vmware_datastore_uncommitted` | Dung lượng đã cấp phát nhưng chưa dùng hết (Thin provisioning) |
+
+### 4. Giám sát Máy ảo (VM)
+| Metric | Ý nghĩa |
+| :--- | :--- |
+| `vmware_vm_cpu_usagemhz_average` | CPU VM đang dùng |
+| `vmware_vm_mem_consumed_average` | RAM VM đang dùng thực tế |
+| `vmware_vm_sys_uptime_latest` | Thời gian máy ảo đã chạy liên tục |
+
+### 5. Thông tin Firmware (ESXCLI)
+| Metric | Ý nghĩa |
+| :--- | :--- |
+| `vmware_esxcli_host_nic_driver` | Thông tin Driver và Firmware của Card mạng |
+| `vmware_esxcli_storage_driver` | Thông tin Driver và Firmware của Card Storage |
 
 ---
 
-## 📝 Lưu ý kỹ thuật
-- **Interval**: Đã cấu hình cố định **300s** để đảm bảo tương thích với vCenter Performance Manager. Đừng thay đổi số này sang các giá trị lạ (như 100, 600) để tránh lỗi `querySpec.interval`.
-- **Prometheus Timeout**: Hãy đặt `scrape_timeout: 290s` trong Prometheus để đồng bộ với Exporter.
+## 🚨 Hệ thống Cảnh báo (Prometheus Alerts)
+
+Bạn có thể sử dụng file `prometheus-alerts.yml` đi kèm để thiết lập cảnh báo tự động:
+- Cảnh báo khi rớt port mạng/quang (`vmware_host_nic_link_status == 0`).
+- Cảnh báo khi Datastore đầy trên 90%.
+- Cảnh báo khi Host bị ngắt kết nối với vCenter.
 
 ---
-*Phát triển và tối ưu bởi Antigravity Team.*
+
+## 📈 Grafana Dashboards
+
+Các file JSON trong thư mục `dashboards/` đã được tối ưu hóa:
+- **vCenter View**: Cái nhìn tổng quan toàn bộ hệ thống.
+- **Host Status Table**: (Mới) Bảng tổng hợp trạng thái Host (Hostname, IP, Uptime, CPU, RAM, Model, Status Up/Down).
+- **Host View**: Chi tiết về port và tài nguyên host.
+- **ESXCLI View**: Chuyên biệt để quản lý phiên bản Driver/Firmware.
+
+---
+*Ghi chú: Luôn đặt `vmware.interval=300` để đảm bảo độ ổn định của dữ liệu hiệu năng từ vCenter.*

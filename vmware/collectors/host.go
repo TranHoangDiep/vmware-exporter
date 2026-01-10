@@ -71,73 +71,89 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 	for _, host := range hosts {
 
+		hostNames[host.Self.Value] = host.Summary.Config.Name
+
+		// 1. Basic Info & Hardware (Exported for ALL hosts)
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "info"),
+				"Basic host info", nil,
+				map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "cmo": host.Parent.Value,
+					"vcenter": loginData["target"].(string)},
+			), prometheus.GaugeValue, 1.0,
+		)
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "hardware_info"),
+				"Hardware information", nil,
+				map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "vendor": host.Summary.Hardware.Vendor,
+					"model": host.Summary.Hardware.Model, "cpu_type": host.Summary.Hardware.CpuModel, "vcenter": loginData["target"].(string)},
+			), prometheus.GaugeValue, 1.0,
+		)
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "software_info"),
+				"Software Information", nil,
+				map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "software": host.Summary.Config.Product.Name,
+					"version": host.Summary.Config.Product.Version, "build": host.Summary.Config.Product.Build,
+					"vcenter": loginData["target"].(string)},
+			), prometheus.GaugeValue, 1.0,
+		)
+
+		hostLabels := map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "vcenter": loginData["target"].(string)}
+
+		// 2. Power State Metric (Crucial for Down detection)
+		powerState := 0.0
+		if host.Runtime.PowerState == "poweredOn" {
+			powerState = 1.0
+		} else if host.Runtime.PowerState == "standBy" {
+			powerState = 2.0
+		}
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "power_state"),
+				"Host power state (1=poweredOn, 0=poweredOff, 2=standBy)", nil, hostLabels,
+			), prometheus.GaugeValue, powerState,
+		)
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "cpu_corecount"),
+				"Number of physical CPU cores", nil, hostLabels,
+			), prometheus.GaugeValue, float64(host.Summary.Hardware.NumCpuCores),
+		)
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "cpu_threadcount"),
+				"Number of virtual (HT) CPU cores", nil, hostLabels,
+			), prometheus.GaugeValue, float64(host.Summary.Hardware.NumCpuThreads),
+		)
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "cpu_capacity"),
+				"Average CPU Frequency", nil, hostLabels,
+			), prometheus.GaugeValue, float64(host.Summary.Hardware.CpuMhz),
+		)
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "mem_capacity"),
+				"Amount of RAM in MB", nil, hostLabels,
+			), prometheus.GaugeValue, float64(host.Summary.Hardware.MemorySize),
+		)
+
+		// 3. Conditional Metrics (Only for Powered On & Connected Hosts)
 		if host.Runtime.PowerState == "poweredOn" && host.Runtime.ConnectionState == "connected" && !host.Runtime.InMaintenanceMode {
 
 			hostRefs = append(hostRefs, host.Self)
 
-			hostNames[host.Self.Value] = host.Summary.Config.Name
-
 			c.logger.Debug("msg", fmt.Sprintf("gathering metrics for host %s with moRef %s\n", host.Summary.Config.Name, host.Self.Value), nil)
 
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "info"),
-					"Basic host info", nil,
-					map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "cmo": host.Parent.Value,
-						"vcenter": loginData["target"].(string)},
-				), prometheus.GaugeValue, 1.0,
-			)
-
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "hardware_info"),
-					"Hardware information", nil,
-					map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "vendor": host.Summary.Hardware.Vendor,
-						"model": host.Summary.Hardware.Model, "cpu_type": host.Summary.Hardware.CpuModel, "vcenter": loginData["target"].(string)},
-				), prometheus.GaugeValue, 1.0,
-			)
-
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "software_info"),
-					"Software Information", nil,
-					map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "software": host.Summary.Config.Product.Name,
-						"version": host.Summary.Config.Product.Version, "build": host.Summary.Config.Product.Build,
-						"vcenter": loginData["target"].(string)},
-				), prometheus.GaugeValue, 1.0,
-			)
-
-			hostLabels := map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "vcenter": loginData["target"].(string)}
-
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "cpu_corecount"),
-					"Number of physical CPU cores", nil, hostLabels,
-				), prometheus.GaugeValue, float64(host.Summary.Hardware.NumCpuCores),
-			)
-
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "cpu_threadcount"),
-					"Number of virtual (HT) CPU cores", nil, hostLabels,
-				), prometheus.GaugeValue, float64(host.Summary.Hardware.NumCpuThreads),
-			)
-
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "cpu_capacity"),
-					"Average CPU Frequency", nil, hostLabels,
-				), prometheus.GaugeValue, float64(host.Summary.Hardware.CpuMhz),
-			)
-
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, hostSubsystem, "mem_capacity"),
-					"Amount of RAM in MB", nil, hostLabels,
-				), prometheus.GaugeValue, float64(host.Summary.Hardware.MemorySize),
-			)
-
-			// New Metric: Physical NIC Link Status (Port Up/Down)
+			// Physical NIC Link Status
 			if host.Config != nil && host.Config.Network != nil {
 				for _, pnic := range host.Config.Network.Pnic {
 					linkStatus := 0.0
@@ -154,7 +170,7 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 				}
 			}
 
-			// New Metric: FC HBA Link Status (Port Up/Down)
+			// FC HBA Link Status
 			if host.Config != nil && host.Config.StorageDevice != nil {
 				for _, hba := range host.Config.StorageDevice.HostBusAdapter {
 					if fcHba, ok := hba.(*types.HostFibreChannelHba); ok {

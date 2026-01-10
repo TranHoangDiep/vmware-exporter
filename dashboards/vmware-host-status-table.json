@@ -1,0 +1,418 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Status"
+                        },
+                        "properties": [
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "0": {
+                                                "color": "red",
+                                                "index": 1,
+                                                "text": "Down (Power Off)"
+                                            },
+                                            "1": {
+                                                "color": "green",
+                                                "index": 0,
+                                                "text": "Up"
+                                            },
+                                            "2": {
+                                                "color": "orange",
+                                                "index": 2,
+                                                "text": "Standby"
+                                            },
+                                            "0.5": {
+                                                "color": "red",
+                                                "index": 3,
+                                                "text": "NIC Link Down"
+                                            }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "CPU %"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "mode": "thresholds"
+                                }
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 70
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 90
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "type": "gauge"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "RAM %"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "mode": "thresholds"
+                                }
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 80
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 95
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "type": "gauge"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Uptime"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "d"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 20,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "10.0.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_info{vcenter=~\"$vcenter\"}",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "Hostname",
+                    "refId": "Hostname"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_hardware_info{vcenter=~\"$vcenter\"}",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "Model",
+                    "refId": "Model"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_sys_uptime_latest{vcenter=~\"$vcenter\"} / 86400",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "Uptime",
+                    "refId": "Uptime"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_cpu_usagemhz_average{vcenter=~\"$vcenter\"} / (vmware_host_cpu_capacity{vcenter=~\"$vcenter\"} * vmware_host_cpu_corecount{vcenter=~\"$vcenter\"}) * 100",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "CPU %",
+                    "refId": "CPU"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "vmware_host_mem_consumed_average{vcenter=~\"$vcenter\"} * 1024 / vmware_host_mem_capacity{vcenter=~\"$vcenter\"} * 100",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "RAM %",
+                    "refId": "RAM"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "(vmware_host_power_state{vcenter=~\"$vcenter\"} == 1) * (min without (device, hostmo, wwn, status) (vmware_host_nic_link_status{vcenter=~\"$vcenter\"}) or (vmware_host_power_state{vcenter=~\"$vcenter\"} * 0 + 1)) * 1 or (vmware_host_power_state{vcenter=~\"$vcenter\"} == 0) * 0 or (vmware_host_power_state{vcenter=~\"$vcenter\"} == 2) * 2",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "Status",
+                    "refId": "Status"
+                }
+            ],
+            "title": "ESXi Host Status Inventory",
+            "transformations": [
+                {
+                    "id": "joinByField",
+                    "options": {
+                        "byField": "host",
+                        "mode": "outer"
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "Time 1": true,
+                            "Time 2": true,
+                            "Time 3": true,
+                            "Time 4": true,
+                            "Time 5": true,
+                            "Value #Hostname": true,
+                            "Value #Model": true,
+                            "cmo": true,
+                            "cpu_count": true,
+                            "cpu_type": true,
+                            "hostmo": true,
+                            "hostmo 1": true,
+                            "hostmo 2": true,
+                            "hostmo 3": true,
+                            "hostmo 4": true,
+                            "hostmo 5": true,
+                            "vcenter 1": true,
+                            "vcenter 2": true,
+                            "vcenter 3": true,
+                            "vcenter 4": true,
+                            "vcenter 5": true,
+                            "vendor": true
+                        },
+                        "indexByName": {
+                            "Value #CPU": 4,
+                            "Value #RAM": 5,
+                            "Value #Status": 6,
+                            "Value #Uptime": 3,
+                            "host": 0,
+                            "model": 1,
+                            "vcenter": 2
+                        },
+                        "renameByName": {
+                            "Value #CPU": "CPU %",
+                            "Value #RAM": "RAM %",
+                            "Value #Status": "Status",
+                            "Value #Uptime": "Uptime",
+                            "host": "Hostname / IP",
+                            "model": "Model",
+                            "vcenter": "vCenter"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        }
+    ],
+    "refresh": "1m",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "vmware",
+        "inventory"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "Prometheus",
+                    "value": "Prometheus"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "label": "Datasource",
+                "multi": false,
+                "name": "datasource",
+                "options": [],
+                "query": "prometheus",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+            },
+            {
+                "allValue": ".*",
+                "current": {
+                    "selected": true,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info, vcenter)",
+                "hide": 0,
+                "includeAll": true,
+                "label": "vCenter",
+                "multi": true,
+                "name": "vcenter",
+                "options": [],
+                "query": {
+                    "query": "label_values(vmware_host_info, vcenter)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "ESXi Host Status Table",
+    "uid": "esxi-host-status",
+    "version": 2,
+    "weekStart": ""
+}
