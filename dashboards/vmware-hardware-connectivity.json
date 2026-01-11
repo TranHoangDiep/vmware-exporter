@@ -700,7 +700,7 @@
                             "instant": true
                         }
                     ],
-                    "title": "NIC DETAIL: EXCEPTIONS ONLY (DOWN PORTS)",
+                    "title": "NIC DETAIL - Status & Speed (Exceptions Only)",
                     "transformations": [
                         {
                             "id": "organize",

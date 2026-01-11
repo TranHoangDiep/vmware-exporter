@@ -87,6 +87,3 @@ Chúng tôi cung cấp bộ Dashboard đã được chuẩn hóa màu sắc NOC 
 Dữ liệu từ Exporter được kết nối với Prometheus Alertmanager để gửi cảnh báo qua Telegram/Email:
 - **Critical**: Rớt Port mạng/quang, Host Down, Datastore > 95%.
 - **Warning**: Snapshot tồn tại > 7 ngày, Datastore > 85%, VM không cài VMware Tools.
-
----
-*Duy trì bởi Antigravity Team - Tối ưu cho giám sát vận hành 24/7.*

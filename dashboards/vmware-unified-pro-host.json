@@ -1,0 +1,1306 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 10,
+            "panels": [],
+            "title": "SECTION 0: HOST HARDWARE & SOFTWARE PROFILE",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "grey"
+                    },
+                    "unit": "none"
+                }
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 8,
+                "x": 0,
+                "y": 1
+            },
+            "id": 11,
+            "options": {
+                "colorMode": "value",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^newmodel$/",
+                    "values": true
+                },
+                "textMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "label_join(label_replace(vmware_host_hardware_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}, \"vendor\", \"$1\", \"vendor\", \"(.*) .*\"), \"newmodel\", \" \", \"vendor\", \"model\")",
+                    "format": "table",
+                    "instant": true
+                }
+            ],
+            "title": "Server Model",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "grey"
+                    },
+                    "unit": "none"
+                }
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 8,
+                "x": 8,
+                "y": 1
+            },
+            "id": 12,
+            "options": {
+                "colorMode": "value",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^cpu_type$/",
+                    "values": true
+                },
+                "textMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "label_replace(vmware_host_hardware_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}, \"cpu_type\", \"$1 $3 $5\", \"cpu_type\", \"(.*)(\\\\(R\\\\))(.*)(\\\\(R\\\\))(.*) CPU @.*\")",
+                    "format": "table",
+                    "instant": true
+                }
+            ],
+            "title": "Processor Architecture",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "grey"
+                    },
+                    "unit": "none"
+                }
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 8,
+                "x": 16,
+                "y": 1
+            },
+            "id": 13,
+            "options": {
+                "colorMode": "value",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^os$/",
+                    "values": true
+                },
+                "textMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "label_join(vmware_host_software_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}, \"os\", \" \", \"software\", \"version\")",
+                    "format": "table",
+                    "instant": true
+                }
+            ],
+            "title": "ESXi OS & Build",
+            "type": "stat"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            },
+            "id": 100,
+            "panels": [],
+            "title": "SECTION 1: HOST RESOURCE SUMMARY & GAUGES",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "blue"
+                    },
+                    "unit": "none"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 0,
+                "y": 5
+            },
+            "id": 101,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_host_cpu_corecount{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"})",
+                    "instant": true
+                }
+            ],
+            "title": "Total Cores",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "fixed",
+                        "fixedColor": "cyan"
+                    },
+                    "unit": "decbytes"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 3,
+                "y": 5
+            },
+            "id": 102,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_host_mem_capacity{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024 * 1024)",
+                    "instant": true
+                }
+            ],
+            "title": "Total Memory",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 2,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 3
+                            },
+                            {
+                                "color": "red",
+                                "value": 6
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 6,
+                "y": 5
+            },
+            "id": 104,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_vm_cpu_corecount{vcenter=~\"$vcenter\"} * on (vmmo) group_left vmware_vm_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) / sum(vmware_host_cpu_threadcount{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"})",
+                    "instant": true
+                }
+            ],
+            "title": "CPU Overcommit",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 2,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1.2
+                            },
+                            {
+                                "color": "red",
+                                "value": 1.5
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 9,
+                "y": 5
+            },
+            "id": 107,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_vm_mem_capacity{vcenter=~\"$vcenter\"} * on (vmmo) group_left vmware_vm_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) / sum(vmware_host_mem_capacity{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} / (1024*1024))",
+                    "instant": true
+                }
+            ],
+            "title": "Mem Overcommit",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 70
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 5
+            },
+            "id": 105,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_host_cpu_usagemhz_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) / sum(vmware_host_cpu_capacity{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * vmware_host_cpu_corecount{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) * 100",
+                    "instant": true
+                }
+            ],
+            "title": "Host CPU Usage (%)",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 80
+                            },
+                            {
+                                "color": "red",
+                                "value": 95
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 5
+            },
+            "id": 106,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_host_mem_consumed_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024) / sum(vmware_host_mem_capacity{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) * 100",
+                    "instant": true
+                }
+            ],
+            "title": "Host Mem Usage (%)",
+            "type": "gauge"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 9
+            },
+            "id": 200,
+            "panels": [],
+            "title": "SECTION 2: PHYSICAL NETWORK & CONNECTIVITY",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        }
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "text": "DOWN"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "text": "UP"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Status"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 0,
+                "y": 10
+            },
+            "id": 201,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_nic_link_status{vcenter=~\"$vcenter\", host=~\"$host\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Physical NIC Status",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {}
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "host": true,
+                            "hostmo": true,
+                            "vcenter": true
+                        },
+                        "indexByName": {
+                            "device": 0,
+                            "speed": 1,
+                            "Value": 2
+                        },
+                        "renameByName": {
+                            "Value": "Status",
+                            "device": "NIC Name",
+                            "speed": "Speed"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        }
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "text": "OFFLINE"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "text": "ONLINE"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Status"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 6,
+                "y": 10
+            },
+            "id": 203,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_fc_link_status{vcenter=~\"$vcenter\", host=~\"$host\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "HBA Card Status",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {}
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "host": true,
+                            "hostmo": true,
+                            "vcenter": true,
+                            "wwn": true,
+                            "status": true
+                        },
+                        "indexByName": {
+                            "device": 0,
+                            "Value": 1
+                        },
+                        "renameByName": {
+                            "Value": "Status",
+                            "device": "HBA Name"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisPlacement": "right",
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "showPoints": "never"
+                    },
+                    "unit": "decbps"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 10
+            },
+            "id": 202,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_net_bytesRx_average{host=~\"$host\"} * 8",
+                    "legendFormat": "{{instance}} (RX)",
+                    "refId": "RX"
+                },
+                {
+                    "expr": "vmware_host_net_bytesTx_average{host=~\"$host\"} * 8",
+                    "legendFormat": "{{instance}} (TX)",
+                    "refId": "TX"
+                }
+            ],
+            "title": "NIC Traffic (Mbps)",
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 18
+            },
+            "id": 300,
+            "panels": [],
+            "title": "SECTION 3: PERFORMANCE DEEP-DIVE (CPU & MEMORY)",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisPlacement": "left",
+                        "drawStyle": "line",
+                        "fillOpacity": 5,
+                        "showPoints": "never"
+                    },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 19
+            },
+            "id": 301,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(vmware_host_cpu_usagemhz_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) / sum(vmware_host_cpu_capacity{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * vmware_host_cpu_corecount{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) * 100",
+                    "legendFormat": "Usage (%)",
+                    "refId": "utilisation"
+                },
+                {
+                    "expr": "avg(vmware_host_cpu_latency_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) / 100",
+                    "legendFormat": "Latency (%)",
+                    "refId": "latency"
+                },
+                {
+                    "expr": "avg(sum(vmware_host_cpu_ready_summation{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} / (20 * 1000)) / sum(vmware_host_cpu_corecount{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"})) * 100",
+                    "legendFormat": "Ready (%)",
+                    "refId": "ready"
+                }
+            ],
+            "title": "Host CPU Performance Metrics",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisPlacement": "left",
+                        "drawStyle": "line",
+                        "fillOpacity": 5,
+                        "showPoints": "never"
+                    },
+                    "unit": "decbytes"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 19
+            },
+            "id": 302,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "vmware_host_mem_consumed_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024",
+                    "legendFormat": "Consumed",
+                    "refId": "consumed"
+                },
+                {
+                    "expr": "vmware_host_mem_active_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024",
+                    "legendFormat": "Active",
+                    "refId": "active"
+                },
+                {
+                    "expr": "vmware_host_mem_vmmemctl_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024",
+                    "legendFormat": "Ballooned",
+                    "refId": "ballooned"
+                },
+                {
+                    "expr": "vmware_host_mem_shared_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024",
+                    "legendFormat": "Shared",
+                    "refId": "shared"
+                },
+                {
+                    "expr": "vmware_host_mem_swapped_average{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"} * 1024",
+                    "legendFormat": "Swapped",
+                    "refId": "swapped"
+                }
+            ],
+            "title": "Host Memory Usage Trends (Deep Metrics)",
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 27
+            },
+            "id": 400,
+            "panels": [],
+            "title": "SECTION 4: VIRTUAL MACHINE INSIGHTS",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 28
+            },
+            "id": 401,
+            "options": {
+                "displayLabels": [
+                    "percent"
+                ],
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "values": [
+                        "value"
+                    ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count by (guest_os) (vmware_vm_info{hostmo=~\"$hostmo\"})",
+                    "instant": true,
+                    "legendFormat": "{{guest_os}}"
+                }
+            ],
+            "title": "Guest OS Distribution",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "hertz"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 28
+            },
+            "id": 402,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": false
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "topk(10, vmware_vm_cpu_usagemhz_average{vcenter=~\"$vcenter\"} * on (vmmo) group_left vmware_vm_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"}) * 1000 * 1000",
+                    "instant": true,
+                    "legendFormat": "{{vm}}"
+                }
+            ],
+            "title": "Top 10 VMs by CPU Usage",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "kbytes"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 28
+            },
+            "id": 403,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": false
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "expr": "topk(10, vmware_vm_mem_consumed_average{vcenter=~\"$vcenter\"} * on (vmmo) group_left vmware_vm_info{vcenter=~\"$vcenter\", hostmo=~\"$hostmo\"})",
+                    "instant": true,
+                    "legendFormat": "{{vm}}"
+                }
+            ],
+            "title": "Top 10 VMs by Memory Used",
+            "type": "piechart"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 36
+            },
+            "id": 500,
+            "panels": [],
+            "title": "SECTION 5: DETAILED VIRTUAL MACHINE INVENTORY",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "text"
+                        }
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "red",
+                                    "text": "STOPPED"
+                                },
+                                "1": {
+                                    "color": "green",
+                                    "text": "RUNNING"
+                                }
+                            },
+                            "type": "value"
+                        },
+                        {
+                            "options": {
+                                "poweredOff": {
+                                    "color": "red",
+                                    "text": "Powered Off"
+                                },
+                                "poweredOn": {
+                                    "color": "green",
+                                    "text": "Powered On"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ]
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Power State"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "OS State"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "options": {
+                                    "type": "color-background"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "RAM (MB)"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "decbytes"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 12,
+                "w": 24,
+                "x": 0,
+                "y": 37
+            },
+            "id": 501,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "vmware_vm_info{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "metadata"
+                },
+                {
+                    "expr": "vmware_vm_cpu_corecount{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "cpu"
+                },
+                {
+                    "expr": "vmware_vm_mem_capacity{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "mem"
+                },
+                {
+                    "expr": "vmware_vm_tools_running_status{hostmo=~\"$hostmo\"}",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "tools"
+                }
+            ],
+            "title": "Virtual Machine Inventory Table",
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {
+                        "keepLabels": [
+                            "vmmo"
+                        ]
+                    }
+                },
+                {
+                    "id": "seriesToColumns",
+                    "options": {
+                        "byField": "vmmo"
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "Time 1": true,
+                            "Time 2": true,
+                            "Time 3": true,
+                            "hostmo": true,
+                            "hostmo 1": true,
+                            "hostmo 2": true,
+                            "hostmo 3": true,
+                            "vcenter": true,
+                            "vcenter 1": true,
+                            "vcenter 2": true,
+                            "vcenter 3": true,
+                            "vm 1": true,
+                            "vm 2": true,
+                            "vm 3": true,
+                            "vmmo": true
+                        },
+                        "indexByName": {
+                            "vm": 0,
+                            "power_state": 1,
+                            "Value 3": 2,
+                            "Value 2": 3,
+                            "Value 1": 4,
+                            "guest_os": 5
+                        },
+                        "renameByName": {
+                            "Value 1": "CPU Cores",
+                            "Value 2": "RAM (MB)",
+                            "Value 3": "OS State",
+                            "guest_os": "Guest OS",
+                            "power_state": "Power State",
+                            "vm": "VM Name"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "tags": [
+        "vmware",
+        "host",
+        "unified",
+        "pro",
+        "enterprise"
+    ],
+    "templating": {
+        "list": [
+            {
+                "name": "datasource",
+                "query": "prometheus",
+                "refresh": 1,
+                "type": "datasource"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info, vcenter)",
+                "name": "vcenter",
+                "query": {
+                    "query": "label_values(vmware_host_info, vcenter)"
+                },
+                "refresh": 1,
+                "type": "query"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info{vcenter=~\"$vcenter\"}, host)",
+                "name": "host",
+                "query": {
+                    "query": "label_values(vmware_host_info{vcenter=~\"$vcenter\"}, host)"
+                },
+                "refresh": 1,
+                "type": "query"
+            },
+            {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(vmware_host_info{host=\"$host\"}, hostmo)",
+                "hide": 2,
+                "name": "hostmo",
+                "query": {
+                    "query": "label_values(vmware_host_info{host=\"$host\"}, hostmo)"
+                },
+                "refresh": 1,
+                "type": "query"
+            }
+        ]
+    },
+    "title": "VMware Unified Pro Host Overview",
+    "uid": "vmw-unified-pro-host",
+    "version": 2
+}

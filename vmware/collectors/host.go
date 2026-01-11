@@ -168,8 +168,10 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 				for _, pnic := range host.Config.Network.Pnic {
 					linkStatus := 0.0
 					speed := "Unknown"
+					var speedValue float64 = 0
 					if pnic.LinkSpeed != nil {
 						linkStatus = 1.0
+						speedValue = float64(pnic.LinkSpeed.SpeedMb)
 						speed = fmt.Sprintf("%d Mbps", pnic.LinkSpeed.SpeedMb)
 					}
 					ch <- prometheus.MustNewConstMetric(
@@ -184,6 +186,18 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 								"speed":   speed,
 							},
 						), prometheus.GaugeValue, linkStatus,
+					)
+					ch <- prometheus.MustNewConstMetric(
+						prometheus.NewDesc(
+							prometheus.BuildFQName(namespace, hostSubsystem, "nic_speed_mbps"),
+							"Physical NIC speed in Mbps", nil,
+							map[string]string{
+								"hostmo":  host.Self.Value,
+								"host":    host.Summary.Config.Name,
+								"device":  pnic.Device,
+								"vcenter": loginData["target"].(string),
+							},
+						), prometheus.GaugeValue, speedValue,
 					)
 				}
 			}
