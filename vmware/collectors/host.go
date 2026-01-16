@@ -28,11 +28,20 @@ var (
 		"cpu.ready.summation", "cpu.readiness.average", "cpu.costop.summation", "cpu.maxlimited.summation",
 		"mem.entitlement.average", "mem.active.average", "mem.shared.average", "mem.vmmemctl.average",
 		"mem.swapped.average", "mem.consumed.average", "sys.uptime.latest",
+		"power.power.average", "power.energy.summation",
+		"sys.resourceCpuUsage.average", "sys.resourceCpuMaxLimited.average", "sys.resourceCpuRunWait.average",
+		"sys.resourceMemAllocated.latest", "sys.resourceMemConsumed.latest", "sys.resourceMemCow.latest",
+		"rescpu.actav.latest", "rescpu.maxlimited.latest", "rescpu.runav.latest",
 	} //Common or generic counters that need not be instanced
 	iHostCounters = []string{"net.bytesRx.average", "net.bytesTx.average", "net.errorsRx.summation", "net.errorsTx.summation", "net.droppedRx.summation", "net.droppedTx.summation",
+		"net.packetsRx.summation", "net.packetsTx.summation", "net.broadcastRx.summation", "net.multicastRx.summation",
+		"disk.commands.summation", "disk.numberRead.summation", "disk.numberWrite.summation",
+		"disk.kernelReadLatency.average", "disk.kernelWriteLatency.average",
+		"storagePath.totalReadLatency.average", "storagePath.totalWriteLatency.average",
+		"storageAdapter.totalReadLatency.average",
 		"datastore.read.average", "datastore.write.average", "datastore.numberReadAveraged.average",
 		"datastore.numberWriteAveraged.average", "datastore.totalReadLatency.average", "datastore.totalWriteLatency.average",
-	} //Counters that come in multiple instances
+	} //Counters that come in multiple i
 
 )
 
@@ -58,9 +67,12 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 	begin := time.Now()
 
+	// Fetch Alarms first to cache names
+	FetchAlarms(loginData["ctx"].(context.Context), loginData["client"].(*vim25.Client), c.logger)
+
 	err := fetchProperties(
 		loginData["ctx"].(context.Context), loginData["view"].(*view.Manager), loginData["client"].(*vim25.Client),
-		[]string{"HostSystem"}, []string{"parent", "summary", "runtime"}, &hosts, c.logger,
+		[]string{"HostSystem"}, []string{"parent", "summary", "runtime", "triggeredAlarmState"}, &hosts, c.logger,
 	)
 	if err != nil {
 		return err
@@ -136,6 +148,11 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 					"Amount of RAM in MB", nil, hostLabels,
 				), prometheus.GaugeValue, float64(host.Summary.Hardware.MemorySize),
 			)
+
+			// New Metric: vCenter Alarms
+			if host.TriggeredAlarmState != nil {
+				RecordTriggeredAlarms(ch, namespace, hostSubsystem, host.Self, host.Summary.Config.Name, loginData["target"].(string), host.TriggeredAlarmState)
+			}
 
 		}
 	}

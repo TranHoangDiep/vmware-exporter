@@ -36,7 +36,14 @@ services:
       
       - "-collector.datacenter=true" 
       # [BAT: TRUE] Thu thập metrics Datacenter
+
+      - "-collector.esxcli.host.nic=true" 
+      - "-collector.esxcli.storage=true" 
+      # [BAT: TRUE] Thu thập thông tin Firmware card mạng (NIC) của ESXi (Qua vCenter)
+
+      - "-collector.esxcli.storage=true" 
+      # [BAT: TRUE] Thu thập thông tin Firmware ổ cứng/controller của ESXi (Qua vCenter)
       
       # --- Các cấu hình nâng cao khác ---
       # - "-log.level=debug"         # Bật log debug nếu cần sửa lỗi
-      # - "-vmware.interval=20"      # Chu kỳ lấy dữ liệu (giây), mặc định 20s
+      - "-vmware.interval=20"      # Chu kỳ lấy dữ liệu (giây), mặc định 20s
