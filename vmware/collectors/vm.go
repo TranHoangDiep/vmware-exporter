@@ -72,7 +72,7 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 
 	err := fetchProperties(
 		loginData["ctx"].(context.Context), loginData["view"].(*view.Manager), loginData["client"].(*vim25.Client),
-		[]string{"VirtualMachine"}, []string{"summary", "runtime", "storage", "guest", "snapshot", "layoutEx", "triggeredAlarmState"}, &vms, c.logger,
+		[]string{"VirtualMachine"}, []string{"summary", "runtime", "storage", "guest", "snapshot", "layoutEx", "triggeredAlarmState", "config"}, &vms, c.logger,
 	)
 	if err != nil {
 		return err
@@ -192,6 +192,60 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 			), prometheus.GaugeValue, toolsStatus,
 		)
 
+		// --- VM Disk Info (Shows which datastore contains the VM disks/snapshots) ---
+		if vm.Config != nil && vm.Config.Hardware.Device != nil {
+			for _, device := range vm.Config.Hardware.Device {
+				if disk, ok := device.(*types.VirtualDisk); ok {
+					if backing, ok := disk.Backing.(*types.VirtualDiskFlatVer2BackingInfo); ok {
+						// Extract datastore name from filename [datastore] path/file.vmdk
+						datastoreName := ""
+						fileName := backing.FileName
+						if len(fileName) > 0 && fileName[0] == '[' {
+							endIdx := 0
+							for i, c := range fileName {
+								if c == ']' {
+									endIdx = i
+									break
+								}
+							}
+							if endIdx > 1 {
+								datastoreName = fileName[1:endIdx]
+							}
+						}
+
+						// Determine disk type
+						diskType := "thick"
+						if backing.ThinProvisioned != nil && *backing.ThinProvisioned {
+							diskType = "thin"
+						}
+
+						diskLabels := map[string]string{
+							"vmmo":         vm.Self.Value,
+							"vm":           vm.Summary.Config.Name,
+							"hostmo":       hostID,
+							"host_name":    hostName,
+							"cluster_name": clusterName,
+							"vcenter":      loginData["target"].(string),
+							"disk_label":   disk.DeviceInfo.GetDescription().Label,
+							"datastore":    datastoreName,
+							"filename":     fileName,
+							"disk_type":    diskType,
+						}
+
+						// Size in GB
+						diskSizeGB := float64(disk.CapacityInBytes) / (1024 * 1024 * 1024)
+
+						ch <- prometheus.MustNewConstMetric(
+							prometheus.NewDesc(
+								prometheus.BuildFQName(namespace, vmSubsystem, "disk_info"),
+								"VM disk information with datastore location (value = size in GB)", nil,
+								diskLabels,
+							), prometheus.GaugeValue, diskSizeGB,
+						)
+					}
+				}
+			}
+		}
 
 		// --- Snapshot Metrics (Collected for ALL VMs) ---
 		snapshotCount := 0.0
@@ -221,8 +275,31 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 				)
 			}
 
-			// Metric: Snapshot Info (Names)
-			recordSnapshotInfo(ch, namespace, vmSubsystem, labels, vm.Snapshot.RootSnapshotList)
+			// Metric: Snapshot Info (Names) - with datastore location
+			if vm.LayoutEx != nil {
+				// Build maps for snapshot file lookup
+				fileMap := make(map[int32]types.VirtualMachineFileLayoutExFileInfo)
+				for _, f := range vm.LayoutEx.File {
+					fileMap[f.Key] = f
+				}
+				snapLayoutMap := make(map[string]string) // snapshot moref -> datastore
+				for _, snapLayout := range vm.LayoutEx.Snapshot {
+					if f, ok := fileMap[snapLayout.DataKey]; ok {
+						// Extract datastore from file name [datastore] path/file
+						if len(f.Name) > 0 && f.Name[0] == '[' {
+							for i, c := range f.Name {
+								if c == ']' {
+									snapLayoutMap[snapLayout.Key.Value] = f.Name[1:i]
+									break
+								}
+							}
+						}
+					}
+				}
+				recordSnapshotInfo(ch, namespace, vmSubsystem, labels, vm.Snapshot.RootSnapshotList, snapLayoutMap)
+			} else {
+				recordSnapshotInfo(ch, namespace, vmSubsystem, labels, vm.Snapshot.RootSnapshotList, nil)
+			}
 
 			// Metric: Snapshot Size in GB
 			snapshotSizeGB := 0.0
@@ -381,7 +458,7 @@ func countSnapshots(snapshots []types.VirtualMachineSnapshotTree, oldest *time.T
 	return count
 }
 // Helper function to record snapshot info recursively
-func recordSnapshotInfo(ch chan<- prometheus.Metric, namespace, subsystem string, commonLabels map[string]string, snapshots []types.VirtualMachineSnapshotTree) {
+func recordSnapshotInfo(ch chan<- prometheus.Metric, namespace, subsystem string, commonLabels map[string]string, snapshots []types.VirtualMachineSnapshotTree, datastoreMap map[string]string) {
 	for _, snap := range snapshots {
 		labels := make(map[string]string)
 		for k, v := range commonLabels {
@@ -390,16 +467,27 @@ func recordSnapshotInfo(ch chan<- prometheus.Metric, namespace, subsystem string
 		labels["snapshot_name"] = snap.Name
 		labels["snapshot_mo"] = snap.Snapshot.Value
 
+		// Add datastore where snapshot is stored
+		if datastoreMap != nil {
+			if ds, ok := datastoreMap[snap.Snapshot.Value]; ok {
+				labels["datastore"] = ds
+			} else {
+				labels["datastore"] = "unknown"
+			}
+		} else {
+			labels["datastore"] = "unknown"
+		}
+
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, subsystem, "snapshot_info"),
-				"Snapshot information (names and MoRefs)", nil,
+				"Snapshot information with datastore location", nil,
 				labels,
 			), prometheus.GaugeValue, 1.0,
 		)
 
 		if snap.ChildSnapshotList != nil {
-			recordSnapshotInfo(ch, namespace, subsystem, commonLabels, snap.ChildSnapshotList)
+			recordSnapshotInfo(ch, namespace, subsystem, commonLabels, snap.ChildSnapshotList, datastoreMap)
 		}
 	}
 }

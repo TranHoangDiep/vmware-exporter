@@ -72,7 +72,7 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 	err := fetchProperties(
 		loginData["ctx"].(context.Context), loginData["view"].(*view.Manager), loginData["client"].(*vim25.Client),
-		[]string{"HostSystem"}, []string{"parent", "summary", "runtime", "triggeredAlarmState"}, &hosts, c.logger,
+		[]string{"HostSystem"}, []string{"parent", "summary", "runtime", "triggeredAlarmState", "config.network", "config.storageDevice"}, &hosts, c.logger,
 	)
 	if err != nil {
 		return err
@@ -83,6 +83,28 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 
 	for _, host := range hosts {
 
+		hostLabels := map[string]string{
+			"hostmo":  host.Self.Value,
+			"host":    host.Summary.Config.Name,
+			"vcenter": loginData["target"].(string),
+		}
+
+		// Power State metric for ALL hosts (1 = poweredOn, 0 = poweredOff, 2 = standBy)
+		powerState := 0.0
+		if host.Runtime.PowerState == "poweredOn" {
+			powerState = 1.0
+		} else if host.Runtime.PowerState == "standBy" {
+			powerState = 2.0
+		}
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, hostSubsystem, "power_state"),
+				"Host power state (1 = poweredOn, 0 = poweredOff, 2 = standBy)", nil,
+				hostLabels,
+			), prometheus.GaugeValue, powerState,
+		)
+
+		// Only collect detailed metrics for powered-on, connected hosts
 		if host.Runtime.PowerState == "poweredOn" && host.Runtime.ConnectionState == "connected" && !host.Runtime.InMaintenanceMode {
 
 			hostRefs = append(hostRefs, host.Self)
@@ -119,8 +141,6 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 				), prometheus.GaugeValue, 1.0,
 			)
 
-			hostLabels := map[string]string{"hostmo": host.Self.Value, "host": host.Summary.Config.Name, "vcenter": loginData["target"].(string)}
-
 			ch <- prometheus.MustNewConstMetric(
 				prometheus.NewDesc(
 					prometheus.BuildFQName(namespace, hostSubsystem, "cpu_corecount"),
@@ -152,6 +172,89 @@ func (c *hostCollector) Update(ch chan<- prometheus.Metric, namespace string, cl
 			// New Metric: vCenter Alarms
 			if host.TriggeredAlarmState != nil {
 				RecordTriggeredAlarms(ch, namespace, hostSubsystem, host.Self, host.Summary.Config.Name, loginData["target"].(string), host.TriggeredAlarmState)
+			}
+
+			// --- NIC Link Status Metrics ---
+			if host.Config != nil && host.Config.Network != nil && host.Config.Network.Pnic != nil {
+				for _, pnic := range host.Config.Network.Pnic {
+					linkUp := 0.0
+					if pnic.LinkSpeed != nil {
+						linkUp = 1.0
+					}
+					nicLabels := map[string]string{
+						"hostmo":  host.Self.Value,
+						"host":    host.Summary.Config.Name,
+						"vcenter": loginData["target"].(string),
+						"device":  pnic.Device,
+					}
+
+					ch <- prometheus.MustNewConstMetric(
+						prometheus.NewDesc(
+							prometheus.BuildFQName(namespace, hostSubsystem, "nic_link_status"),
+							"Physical NIC link status (1 = Up, 0 = Down)", nil,
+							nicLabels,
+						), prometheus.GaugeValue, linkUp,
+					)
+
+					// NIC Speed in Mbps
+					if pnic.LinkSpeed != nil {
+						ch <- prometheus.MustNewConstMetric(
+							prometheus.NewDesc(
+								prometheus.BuildFQName(namespace, hostSubsystem, "nic_speed_mbps"),
+								"Physical NIC link speed in Mbps", nil,
+								nicLabels,
+							), prometheus.GaugeValue, float64(pnic.LinkSpeed.SpeedMb),
+						)
+					}
+				}
+			}
+
+			// --- FC HBA Link Status Metrics ---
+			if host.Config != nil && host.Config.StorageDevice != nil && host.Config.StorageDevice.HostBusAdapter != nil {
+				for _, hbaBase := range host.Config.StorageDevice.HostBusAdapter {
+					// Check if it's a FibreChannel HBA
+					if fcHba, ok := hbaBase.(*types.HostFibreChannelHba); ok {
+						fcStatus := 0.0
+						if fcHba.Status == "online" {
+							fcStatus = 1.0
+						}
+						fcLabels := map[string]string{
+							"hostmo":  host.Self.Value,
+							"host":    host.Summary.Config.Name,
+							"vcenter": loginData["target"].(string),
+							"device":  fcHba.Device,
+							"wwn":     fmt.Sprintf("%016x", fcHba.PortWorldWideName),
+							"status":  string(fcHba.Status),
+						}
+						ch <- prometheus.MustNewConstMetric(
+							prometheus.NewDesc(
+								prometheus.BuildFQName(namespace, hostSubsystem, "fc_link_status"),
+								"Fibre Channel HBA link status (1 = Online, 0 = Offline)", nil,
+								fcLabels,
+							), prometheus.GaugeValue, fcStatus,
+						)
+					}
+				}
+			}
+
+			// --- PortGroup VLAN Metrics ---
+			if host.Config != nil && host.Config.Network != nil && host.Config.Network.Portgroup != nil {
+				for _, pg := range host.Config.Network.Portgroup {
+					pgLabels := map[string]string{
+						"hostmo":    host.Self.Value,
+						"host":      host.Summary.Config.Name,
+						"vcenter":   loginData["target"].(string),
+						"portgroup": pg.Spec.Name,
+						"vswitch":   pg.Spec.VswitchName,
+					}
+					ch <- prometheus.MustNewConstMetric(
+						prometheus.NewDesc(
+							prometheus.BuildFQName(namespace, hostSubsystem, "portgroup_vlan"),
+							"PortGroup VLAN ID (1-4094, 4095 = Trunk, 0 = None)", nil,
+							pgLabels,
+						), prometheus.GaugeValue, float64(pg.Spec.VlanId),
+					)
+				}
 			}
 
 		}
