@@ -192,38 +192,39 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 			), prometheus.GaugeValue, toolsStatus,
 		)
 
-		// Only collect these if powered on or appropriate
-		if vm.Runtime.PowerState == "poweredOn" {
 
-			// New Metric: VM Uptime
-			if vm.Summary.QuickStats.UptimeSeconds != 0 {
+		// --- Snapshot Metrics (Collected for ALL VMs) ---
+		snapshotCount := 0.0
+		var oldestSnapshot time.Time
+		if vm.Snapshot != nil && vm.Snapshot.RootSnapshotList != nil {
+			snapshotCount = countSnapshots(vm.Snapshot.RootSnapshotList, &oldestSnapshot)
+		}
+
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				prometheus.BuildFQName(namespace, vmSubsystem, "snapshot_count"),
+				"Number of snapshots", nil,
+				labels,
+			), prometheus.GaugeValue, snapshotCount,
+		)
+
+		if snapshotCount > 0 {
+			// New Metric: Snapshot Age in Days
+			if !oldestSnapshot.IsZero() {
+				snapshotAgeDays := time.Since(oldestSnapshot).Hours() / 24.0
 				ch <- prometheus.MustNewConstMetric(
 					prometheus.NewDesc(
-						prometheus.BuildFQName(namespace, vmSubsystem, "uptime_seconds"),
-						"VM uptime in seconds", nil,
+						prometheus.BuildFQName(namespace, vmSubsystem, "snapshot_age_days"),
+						"Age of the oldest snapshot in days", nil,
 						labels,
-					), prometheus.GaugeValue, float64(vm.Summary.QuickStats.UptimeSeconds),
+					), prometheus.GaugeValue, snapshotAgeDays,
 				)
 			}
 
-			// New Metric: Snapshot Count
-			snapshotCount := 0.0
-			if vm.Snapshot != nil && vm.Snapshot.RootSnapshotList != nil {
-				snapshotCount = countSnapshots(vm.Snapshot.RootSnapshotList)
-			}
-			ch <- prometheus.MustNewConstMetric(
-				prometheus.NewDesc(
-					prometheus.BuildFQName(namespace, vmSubsystem, "snapshot_count"),
-					"Number of snapshots", nil,
-					labels,
-				), prometheus.GaugeValue, snapshotCount,
-			)
-			// New Metric: Snapshot Info (Names)
-			if vm.Snapshot != nil && vm.Snapshot.RootSnapshotList != nil {
-				recordSnapshotInfo(ch, namespace, vmSubsystem, labels, vm.Snapshot.RootSnapshotList)
-			}
+			// Metric: Snapshot Info (Names)
+			recordSnapshotInfo(ch, namespace, vmSubsystem, labels, vm.Snapshot.RootSnapshotList)
 
-			// New Metric: Snapshot Size in GB
+			// Metric: Snapshot Size in GB
 			snapshotSizeGB := 0.0
 			if vm.LayoutEx != nil {
 				var sizeBytes int64
@@ -255,6 +256,49 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 					labels,
 				), prometheus.GaugeValue, snapshotSizeGB,
 			)
+		}
+
+		// --- Network Info (Collected for ALL VMs if Guest info available) ---
+		if vm.Guest != nil {
+			for _, nic := range vm.Guest.Net {
+				ip := "-"
+				if len(nic.IpAddress) > 0 {
+					ip = nic.IpAddress[0]
+				}
+				ch <- prometheus.MustNewConstMetric(
+					prometheus.NewDesc(
+						prometheus.BuildFQName(namespace, vmSubsystem, "network_info"),
+						"VM network interface info", nil,
+						map[string]string{
+							"vmmo":         vm.Self.Value,
+							"vm":           vm.Summary.Config.Name,
+							"hostmo":       hostID,
+							"host_name":    hostName,
+							"cluster_name": clusterName,
+							"vcenter":      loginData["target"].(string),
+							"network":      nic.Network,
+							"mac_address":  nic.MacAddress,
+							"ip_address":   ip,
+							"connected":    fmt.Sprintf("%t", nic.Connected),
+						},
+					), prometheus.GaugeValue, 1.0,
+				)
+			}
+		}
+
+		// Only collect these if powered on or appropriate
+		if vm.Runtime.PowerState == "poweredOn" {
+
+			// New Metric: VM Uptime
+			if vm.Summary.QuickStats.UptimeSeconds != 0 {
+				ch <- prometheus.MustNewConstMetric(
+					prometheus.NewDesc(
+						prometheus.BuildFQName(namespace, vmSubsystem, "uptime_seconds"),
+						"VM uptime in seconds", nil,
+						labels,
+					), prometheus.GaugeValue, float64(vm.Summary.QuickStats.UptimeSeconds),
+				)
+			}
 
 			// New Metric: vCenter Alarms
 			if vm.TriggeredAlarmState != nil {
@@ -322,13 +366,16 @@ func (c *vmCollector) Update(ch chan<- prometheus.Metric, namespace string, clie
 	return nil
 }
 
-// Helper function to count snapshots recursively
-func countSnapshots(snapshots []types.VirtualMachineSnapshotTree) float64 {
+// Helper function to count snapshots recursively and find oldest timestamp
+func countSnapshots(snapshots []types.VirtualMachineSnapshotTree, oldest *time.Time) float64 {
 	count := 0.0
 	for _, snap := range snapshots {
 		count++
+		if oldest.IsZero() || snap.CreateTime.Before(*oldest) {
+			*oldest = snap.CreateTime
+		}
 		if snap.ChildSnapshotList != nil {
-			count += countSnapshots(snap.ChildSnapshotList)
+			count += countSnapshots(snap.ChildSnapshotList, oldest)
 		}
 	}
 	return count

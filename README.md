@@ -47,9 +47,11 @@ The esxcli collectors are a very specific use case that probably is not going to
 
 ## New Metrics Added
 This fork includes additional metrics for better monitoring:
-- **vmware_vm_snapshot_count**: Number of snapshots on a VM (Helpful to detect forgotten snapshots).
+- **vmware_vm_snapshot_count**: Number of snapshots on a VM (Works even if VM is off).
 - **vmware_vm_snapshot_size_gb**: Total size of all snapshots for a VM in GB.
 - **vmware_vm_snapshot_info**: Accurate list of all snapshots per VM with names and MoRefs.
+- **vmware_vm_snapshot_age_days**: Age of the oldest snapshot in days.
+- **vmware_vm_network_info**: VM network interface info (IP, MAC, Network).
 - **vmware_alarm_triggered**: Active alarms from vCenter (VM/Host/Cluster). Value: 1 (Yellow), 2 (Red).
 - **vmware_vm_uptime_seconds**: Uptime of the VM in seconds.
 - **vmware_vm_tools_running_status**: Status of VMware Tools (1 = running, 0 = not running).
